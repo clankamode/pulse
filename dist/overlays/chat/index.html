@@ -106,20 +106,38 @@
     }
 
     .badge {
-      width: 0.7em;
-      height: 0.7em;
-      background: rgba(255, 255, 255, 0.6);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 1.7em;
+      height: 1.45em;
+      padding: 0 0.45em;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.8);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.48em;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      line-height: 1;
       flex-shrink: 0;
     }
 
     .badge.subscriber {
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.42);
+      background: rgba(255, 255, 255, 0.1);
     }
 
-    .badge.mod {
-      clip-path: polygon(50% 0%, 100% 20%, 84% 100%, 16% 100%, 0% 20%);
-      background: rgba(255, 255, 255, 0.82);
+    .badge.moderator {
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .badge.broadcaster {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .badge.vip {
+      background: rgba(255, 255, 255, 0.13);
     }
 
     .content {
@@ -232,9 +250,27 @@
       'chat heard that', 'clip it', 'real one', 'same', 'facts'
     ];
 
+    const badgeDefinitions = {
+      admin: { key: 'admin', label: 'ADM', title: 'Admin' },
+      broadcaster: { key: 'broadcaster', label: 'LIVE', title: 'Broadcaster' },
+      founder: { key: 'founder', label: 'FND', title: 'Founder' },
+      global_mod: { key: 'global_mod', label: 'GLB', title: 'Global Moderator' },
+      moderator: { key: 'moderator', label: 'MOD', title: 'Moderator' },
+      premium: { key: 'premium', label: 'PRM', title: 'Prime Gaming' },
+      staff: { key: 'staff', label: 'STF', title: 'Staff' },
+      subscriber: { key: 'subscriber', label: 'SUB', title: 'Subscriber' },
+      turbo: { key: 'turbo', label: 'TRB', title: 'Turbo' },
+      vip: { key: 'vip', label: 'VIP', title: 'VIP' }
+    };
+
     const feed = document.getElementById('chat-feed');
     const cleanup = [];
     let demoTimer = null;
+    let reconnectTimer = null;
+    let socket = null;
+    let reconnectAttempts = 0;
+    let activeMode = 'idle';
+    let allowReconnect = false;
 
     document.body.dataset.platform = config.platform;
     document.documentElement.style.setProperty('--message-color', config.color);
@@ -255,6 +291,84 @@
       const saturation = 48 + (hash % 18);
       const lightness = 62 + (hash % 10);
       return 'hsl(' + hue + ' ' + saturation + '% ' + lightness + '%)';
+    }
+
+    function normalizeChannelName(value) {
+      return (value || '').trim().replace(/^#/, '').toLowerCase();
+    }
+
+    function decodeTagValue(value) {
+      return value
+        .replace(/\\:/g, ';')
+        .replace(/\\s/g, ' ')
+        .replace(/\\\\/g, '\\')
+        .replace(/\\r/g, '\r')
+        .replace(/\\n/g, '\n');
+    }
+
+    function parseTags(rawTags) {
+      const tags = {};
+      if (!rawTags) {
+        return tags;
+      }
+
+      rawTags.split(';').forEach((entry) => {
+        const separatorIndex = entry.indexOf('=');
+        if (separatorIndex === -1) {
+          tags[entry] = '';
+          return;
+        }
+
+        const key = entry.slice(0, separatorIndex);
+        const value = entry.slice(separatorIndex + 1);
+        tags[key] = decodeTagValue(value);
+      });
+
+      return tags;
+    }
+
+    function formatBadgeLabel(name) {
+      return name
+        .split('_')
+        .join(' ')
+        .slice(0, 3)
+        .toUpperCase();
+    }
+
+    function normalizeBadge(badge) {
+      const rawKey = typeof badge === 'string' ? badge : badge && badge.key;
+      if (!rawKey) {
+        return null;
+      }
+
+      const aliases = {
+        mod: 'moderator'
+      };
+
+      const key = aliases[rawKey] || rawKey;
+
+      const definition = badgeDefinitions[key];
+      if (definition) {
+        return definition;
+      }
+
+      return {
+        key,
+        label: formatBadgeLabel(key),
+        title: key.split('_').join(' ')
+      };
+    }
+
+    function parseBadgeTag(rawBadgeTag) {
+      if (!rawBadgeTag) {
+        return [];
+      }
+
+      return rawBadgeTag
+        .split(',')
+        .map((entry) => entry.split('/')[0])
+        .map((badge) => normalizeBadge(badge))
+        .filter(Boolean);
     }
 
     function removeMessage(node) {
@@ -295,20 +409,45 @@
       wrapper.className = 'badges';
 
       badges.forEach((badge) => {
-        const dot = document.createElement('span');
-        dot.className = 'badge ' + badge;
-        dot.title = badge === 'mod' ? 'Moderator' : 'Subscriber';
-        wrapper.appendChild(dot);
+        const descriptor = normalizeBadge(badge);
+        if (!descriptor) {
+          return;
+        }
+
+        const chip = document.createElement('span');
+        chip.className = 'badge ' + descriptor.key;
+        chip.title = descriptor.title;
+        chip.textContent = descriptor.label;
+        wrapper.appendChild(chip);
       });
 
       return wrapper;
     }
 
-    function addMessage(username, message, badges) {
+    function normalizeMessagePayload(usernameOrPayload, message, badges, color) {
+      if (typeof usernameOrPayload === 'object' && usernameOrPayload !== null) {
+        return {
+          username: usernameOrPayload.username || 'chat',
+          message: usernameOrPayload.message || '',
+          badges: Array.isArray(usernameOrPayload.badges) ? usernameOrPayload.badges : [],
+          color: usernameOrPayload.color || ''
+        };
+      }
+
+      return {
+        username: usernameOrPayload || 'chat',
+        message: message || '',
+        badges: Array.isArray(badges) ? badges : [],
+        color: color || ''
+      };
+    }
+
+    function addMessage(usernameOrPayload, message, badges, color) {
+      const payload = normalizeMessagePayload(usernameOrPayload, message, badges, color);
       const node = document.createElement('article');
       node.className = 'chat-message is-entering';
 
-      const badgeList = Array.isArray(badges) ? badges.filter(Boolean) : [];
+      const badgeList = payload.badges.filter(Boolean);
       if (badgeList.length) {
         node.appendChild(buildBadges(badgeList));
       }
@@ -319,12 +458,12 @@
       const usernameEl = document.createElement('span');
       usernameEl.className = 'username';
       usernameEl.style.fontFamily = fonts[config.font];
-      usernameEl.style.color = usernameColor(username);
-      usernameEl.textContent = username;
+      usernameEl.style.color = payload.color || usernameColor(payload.username);
+      usernameEl.textContent = payload.username;
 
       const messageEl = document.createElement('span');
       messageEl.className = 'message-text';
-      messageEl.textContent = message;
+      messageEl.textContent = payload.message;
 
       content.appendChild(usernameEl);
       content.appendChild(messageEl);
@@ -349,7 +488,7 @@
         badges.push('subscriber');
       }
       if (Math.random() < 0.16) {
-        badges.push('mod');
+        badges.push('moderator');
       }
       return badges;
     }
@@ -362,7 +501,8 @@
       return {
         username,
         message: base + maybeSuffix + maybeChannel,
-        badges: pickBadges()
+        badges: pickBadges(),
+        color: usernameColor(username)
       };
     }
 
@@ -370,12 +510,22 @@
       const delay = 2000 + Math.floor(Math.random() * 3000);
       demoTimer = window.setTimeout(() => {
         const next = buildDemoMessage();
-        addMessage(next.username, next.message, next.badges);
+        addMessage(next);
         scheduleDemoTick();
       }, delay);
     }
 
     function startDemoMode() {
+      if (activeMode === 'demo') {
+        return function stopDemoMode() {
+          if (demoTimer) {
+            window.clearTimeout(demoTimer);
+            demoTimer = null;
+          }
+        };
+      }
+
+      activeMode = 'demo';
       scheduleDemoTick();
       return function stopDemoMode() {
         if (demoTimer) {
@@ -385,13 +535,171 @@
       };
     }
 
+    function stopDemoMode() {
+      activeMode = activeMode === 'demo' ? 'idle' : activeMode;
+      if (demoTimer) {
+        window.clearTimeout(demoTimer);
+        demoTimer = null;
+      }
+    }
+
+    function stopTwitchMode() {
+      activeMode = activeMode === 'twitch' ? 'idle' : activeMode;
+      allowReconnect = false;
+
+      if (reconnectTimer) {
+        window.clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+      }
+
+      if (socket) {
+        const current = socket;
+        socket = null;
+        if (current.readyState === WebSocket.OPEN || current.readyState === WebSocket.CONNECTING) {
+          current.close();
+        }
+      }
+    }
+
+    function fallbackToDemo() {
+      stopTwitchMode();
+      startDemoMode();
+    }
+
+    function scheduleReconnect(channel) {
+      if (!allowReconnect) {
+        return;
+      }
+
+      if (reconnectAttempts >= 5) {
+        fallbackToDemo();
+        return;
+      }
+
+      reconnectAttempts += 1;
+      reconnectTimer = window.setTimeout(() => {
+        reconnectTimer = null;
+        connectToTwitch(channel);
+      }, 3000);
+    }
+
+    function sendIrcLine(line) {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(line);
+      }
+    }
+
+    function parsePrivmsg(line) {
+      const match = line.match(/^(?:@([^ ]+) )?:([^ ]+) PRIVMSG #([^ ]+) :(.*)$/);
+      if (!match) {
+        return null;
+      }
+
+      const tags = parseTags(match[1] || '');
+      const prefix = match[2] || '';
+      const username = prefix.split('!')[0] || tags['display-name'] || 'chat';
+      const displayName = tags['display-name'] || username;
+      const message = match[4] || '';
+      const badges = parseBadgeTag(tags.badges || '');
+      const color = tags.color || usernameColor(displayName);
+
+      return {
+        username: displayName,
+        message,
+        badges,
+        color
+      };
+    }
+
+    function handleSocketMessage(event) {
+      const lines = String(event.data || '').split('\r\n').filter(Boolean);
+
+      lines.forEach((line) => {
+        if (line.startsWith('PING ')) {
+          sendIrcLine(line.replace('PING', 'PONG'));
+          return;
+        }
+
+        if (line.includes(' PRIVMSG ')) {
+          const payload = parsePrivmsg(line);
+          if (payload) {
+            addMessage(payload);
+          }
+        }
+      });
+    }
+
+    function connectToTwitch(channel) {
+      const normalizedChannel = normalizeChannelName(channel);
+      if (!normalizedChannel || typeof window.WebSocket !== 'function') {
+        fallbackToDemo();
+        return;
+      }
+
+      stopDemoMode();
+      stopTwitchMode();
+
+      allowReconnect = true;
+      activeMode = 'twitch';
+      const currentSocket = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
+      socket = currentSocket;
+
+      currentSocket.addEventListener('open', () => {
+        if (socket !== currentSocket) {
+          return;
+        }
+
+        reconnectAttempts = 0;
+        sendIrcLine('PASS oauth:dummy');
+        sendIrcLine('NICK justinfan' + Math.floor(Math.random() * 99999));
+        sendIrcLine('CAP REQ :twitch.tv/tags twitch.tv/commands');
+        sendIrcLine('JOIN #' + normalizedChannel);
+      });
+
+      currentSocket.addEventListener('message', (event) => {
+        if (socket !== currentSocket) {
+          return;
+        }
+
+        handleSocketMessage(event);
+      });
+
+      currentSocket.addEventListener('error', () => {
+        if (socket !== currentSocket) {
+          return;
+        }
+
+        if (currentSocket.readyState === WebSocket.OPEN || currentSocket.readyState === WebSocket.CONNECTING) {
+          currentSocket.close();
+        }
+      });
+
+      currentSocket.addEventListener('close', () => {
+        if (socket !== currentSocket) {
+          return;
+        }
+
+        socket = null;
+        scheduleReconnect(normalizedChannel);
+      });
+    }
+
     function createConnector() {
       return {
         start() {
+          const channel = normalizeChannelName(config.channel);
+          if (config.platform === 'twitch' && channel) {
+            connectToTwitch(channel);
+            return function stopConnector() {
+              stopTwitchMode();
+              stopDemoMode();
+            };
+          }
+
           return startDemoMode();
         },
         push(payload) {
-          addMessage(payload.username, payload.message, payload.badges || []);
+          addMessage(payload);
         }
       };
     }
@@ -399,6 +707,8 @@
     const connector = createConnector();
     const stop = connector.start();
     cleanup.push(() => {
+      stopTwitchMode();
+      stopDemoMode();
       if (typeof stop === 'function') {
         stop();
       }

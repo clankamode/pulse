@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Pulse</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0b;
+      --bg-elevated: #111113;
+      --bg-card: #16161a;
+      --border: #222228;
+      --text: #e8e8ed;
+      --text-muted: #7a7a85;
+      --accent: #00ff88;
+      --accent-dim: #00cc6a;
+      --accent-glow: rgba(0, 255, 136, 0.15);
+      --orange: #ff8844;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 240px;
+      background: var(--bg-elevated);
+      border-right: 1px solid var(--border);
+      padding: 20px 0;
+      flex-shrink: 0;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      overflow-y: auto;
+    }
+
+    .sidebar-logo {
+      padding: 0 20px 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 800;
+      font-size: 1.2rem;
+      text-decoration: none;
+      color: var(--text);
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+
+    .logo-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse-dot 2s ease-in-out infinite;
+      box-shadow: 0 0 8px var(--accent);
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(0.85); }
+    }
+
+    .sidebar-section {
+      padding: 0 12px;
+      margin-bottom: 8px;
+    }
+
+    .sidebar-section-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      padding: 8px 8px 4px;
+    }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      transition: all 0.15s;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      font-family: inherit;
+    }
+
+    .sidebar-item:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+    .sidebar-item.active { color: var(--accent); background: var(--accent-glow); }
+
+    .sidebar-item .icon { font-size: 1.1rem; width: 24px; text-align: center; }
+
+    /* Main */
+    .main {
+      flex: 1;
+      margin-left: 240px;
+      padding: 32px;
+      max-width: 900px;
+    }
+
+    .page-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .page-subtitle {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 32px;
+    }
+
+    /* Tool config panels */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* Form elements */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .form-input, .form-select {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-size: 0.9rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus, .form-select:focus {
+      border-color: var(--accent);
+    }
+
+    .form-input::placeholder { color: var(--text-muted); }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-row-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* Platform tabs */
+    .platform-tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 20px;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .platform-tab {
+      flex: 1;
+      padding: 10px 16px;
+      text-align: center;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--bg);
+      color: var(--text-muted);
+      border: none;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+
+    .platform-tab:not(:last-child) { border-right: 1px solid var(--border); }
+    .platform-tab.active { background: var(--accent); color: #000; }
+    .platform-tab:hover:not(.active) { color: var(--text); background: var(--bg-card); }
+
+    /* Toggle */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+    }
+
+    .toggle-label { font-size: 0.9rem; font-weight: 500; }
+
+    .toggle {
+      width: 44px;
+      height: 24px;
+      background: var(--border);
+      border-radius: 12px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .toggle.on { background: var(--accent); }
+
+    .toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+
+    .toggle.on::after { transform: translateX(20px); }
+
+    /* Slider */
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      background: var(--accent);
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .slider-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      min-width: 48px;
+      text-align: right;
+    }
+
+    /* Copy button */
+    .copy-section {
+      margin-top: 28px;
+      padding: 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    .copy-url {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      word-break: break-all;
+      margin-bottom: 12px;
+      padding: 10px;
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+
+    .btn-copy {
+      width: 100%;
+      padding: 14px;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-copy:hover {
+      background: #33ffaa;
+      box-shadow: 0 0 24px var(--accent-glow);
+    }
+
+    .btn-copy.copied {
+      background: var(--accent-dim);
+    }
+
+    /* Preview */
+    .preview-section {
+      margin-top: 24px;
+    }
+
+    .preview-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .preview-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--accent);
+    }
+
+    .preview-toggle {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: inherit;
+    }
+
+    .preview-toggle:hover { color: var(--text); }
+
+    .preview-frame {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      min-height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .preview-frame iframe {
+      width: 100%;
+      height: 200px;
+      border: none;
+    }
+
+    /* Dashboard home cards */
+    .dash-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+    }
+
+    .dash-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .dash-card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    .dash-card .icon { font-size: 1.5rem; margin-bottom: 10px; }
+    .dash-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+    .dash-card p { font-size: 0.85rem; color: var(--text-muted); }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 20px 16px; }
+      .form-row, .form-row-3 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <a href="/" class="sidebar-logo">
+      <span class="logo-dot"></span>
+      Pulse
+    </a>
+    <div class="sidebar-section">
+      <button class="sidebar-item active" data-tool="home">
+        <span class="icon">⌂</span> Dashboard
+      </button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Overlay Tools</div>
+      <button class="sidebar-item" data-tool="timer">
+        <span class="icon">⏱</span> Timer
+      </button>
+      <button class="sidebar-item" data-tool="viewer">
+        <span class="icon">👁</span> Viewer Count
+      </button>
+      <button class="sidebar-item" data-tool="follower">
+        <span class="icon">💚</span> Follower Count
+      </button>
+      <button class="sidebar-item" data-tool="chat">
+        <span class="icon">💬</span> Chat Box
+      </button>
+      <button class="sidebar-item" data-tool="geo">
+        <span class="icon">📍</span> Geo Location
+      </button>
+      <button class="sidebar-item" data-tool="subcount">
+        <span class="icon">⭐</span> Sub Count
+      </button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <!-- Home -->
+    <div class="panel active" id="panel-home">
+      <h1 class="page-title">Welcome to Pulse</h1>
+      <p class="page-subtitle">Pick a tool to generate an overlay URL for OBS.</p>
+      <div class="dash-grid">
+        <div class="dash-card" data-tool="timer">
+          <div class="icon">⏱</div>
+          <h3>Timer</h3>
+          <p>Count up or down for subathons, events, and milestones.</p>
+        </div>
+        <div class="dash-card" data-tool="viewer">
+          <div class="icon">👁</div>
+          <h3>Viewer Count</h3>
+          <p>Live viewer count for Twitch, YouTube, Kick, or combined.</p>
+        </div>
+        <div class="dash-card" data-tool="follower">
+          <div class="icon">💚</div>
+          <h3>Follower Count</h3>
+          <p>Follower count with optional goal display.</p>
+        </div>
+        <div class="dash-card" data-tool="chat">
+          <div class="icon">💬</div>
+          <h3>Chat Box</h3>
+          <p>Chat overlay for Twitch, Kick, and YouTube.</p>
+        </div>
+        <div class="dash-card" data-tool="geo">
+          <div class="icon">📍</div>
+          <h3>Geo Location</h3>
+          <p>City, weather, and local time on stream.</p>
+        </div>
+        <div class="dash-card" data-tool="subcount">
+          <div class="icon">⭐</div>
+          <h3>Sub Count</h3>
+          <p>Subscriber count with goal tracking.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timer -->
+    <div class="panel" id="panel-timer">
+      <h1 class="page-title">Timer</h1>
+      <p class="page-subtitle">Count up or down timer overlay for OBS.</p>
+
+      <div class="form-group">
+        <label class="form-label">Mode</label>
+        <div class="platform-tabs" id="timer-mode-tabs">
+          <button class="platform-tab active" data-val="down">Count Down</button>
+          <button class="platform-tab" data-val="up">Count Up</button>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Date</label>
+          <input type="date" class="form-input" id="timer-date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Time</label>
+          <input type="time" class="form-input" id="timer-time" value="12:00">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Font</label>
+          <select class="form-select" id="timer-font">
+            <option value="mono">Monospace</option>
+            <option value="inter">Inter</option>
+            <option value="russo">Russo One</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Color</label>
+          <input type="color" class="form-input" id="timer-color" value="#ffffff" style="height:42px;padding:4px;">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Font Size</label>
+        <div class="slider-row">
+          <input type="range" min="1" max="10" value="4" id="timer-size">
+          <span class="slider-val" id="timer-size-val">4rem</span>
+        </div>
+      </div>
+
+      <div class="toggle-row">
+        <span class="toggle-label">Show Labels (Hours / Minutes / Seconds)</span>
+        <div class="toggle on" id="timer-labels"></div>
+      </div>
+
+      <div class="copy-section">
+        <div class="copy-url" id="timer-url">Configure timer to generate URL...</div>
+        <button class="btn-copy" id="timer-copy">📋 Copy to OBS</button>
+      </div>
+
+      <div class="preview-section">
+        <div class="preview-header">
+          <span class="preview-label">Live Preview</span>
+        </div>
+        <div class="preview-frame">
+          <iframe id="timer-preview"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <!-- Viewer Count -->
+    <div class="panel" id="panel-viewer">
+      <h1 class="page-title">Viewer Count</h1>
+      <p class="page-subtitle">Display live viewer count in OBS. No login required.</p>
+
+      <div class="form-group">
+        <label class="form-label">Platform</label>
+        <div class="platform-tabs" id="viewer-platform-tabs">
+          <button class="platform-tab active" data-val="twitch">Twitch</button>
+          <button class="platform-tab" data-val="youtube">YouTube</button>
+          <button class="platform-tab" data-val="kick">Kick</button>
+          <button class="platform-tab" data-val="combined">Combined</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Channel Name</label>
+        <input type="text" class="form-input" id="viewer-channel" placeholder="e.g. ninja">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Font</label>
+          <select class="form-select" id="viewer-font">
+            <option value="mono">Monospace</option>
+            <option value="inter">Inter</option>
+            <option value="russo">Russo One</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Color</label>
+          <input type="color" class="form-input" id="viewer-color" value="#ffffff" style="height:42px;padding:4px;">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Font Size</label>
+        <div class="slider-row">
+          <input type="range" min="1" max="10" value="4" id="viewer-size">
+          <span class="slider-val" id="viewer-size-val">4rem</span>
+        </div>
+      </div>
+
+      <div class="toggle-row">
+        <span class="toggle-label">Show Platform Icon</span>
+        <div class="toggle on" id="viewer-icon"></div>
+      </div>
+
+      <div class="copy-section">
+        <div class="copy-url" id="viewer-url">Enter a channel name to generate URL...</div>
+        <button class="btn-copy" id="viewer-copy">📋 Copy to OBS</button>
+      </div>
+
+      <div class="preview-section">
+        <div class="preview-header">
+          <span class="preview-label">Live Preview</span>
+        </div>
+        <div class="preview-frame">
+          <iframe id="viewer-preview"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <!-- Follower Count -->
+    <div class="panel" id="panel-follower">
+      <h1 class="page-title">Follower Count</h1>
+      <p class="page-subtitle">Show your follower count with optional goal bar.</p>
+
+      <div class="form-group">
+        <label class="form-label">Platform</label>
+        <div class="platform-tabs" id="follower-platform-tabs">
+          <button class="platform-tab active" data-val="twitch">Twitch</button>
+          <button class="platform-tab" data-val="kick">Kick</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Channel Name</label>
+        <input type="text" class="form-input" id="follower-channel" placeholder="e.g. ninja">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Font</label>
+          <select class="form-select" id="follower-font">
+            <option value="mono">Monospace</option>
+            <option value="inter">Inter</option>
+            <option value="russo">Russo One</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Color</label>
+          <input type="color" class="form-input" id="follower-color" value="#ffffff" style="height:42px;padding:4px;">
+        </div>
+      </div>
+
+      <div class="toggle-row">
+        <span class="toggle-label">Show Goal Bar</span>
+        <div class="toggle" id="follower-goal-toggle"></div>
+      </div>
+
+      <div class="form-group" id="follower-goal-group" style="display:none;">
+        <label class="form-label">Goal (follower count)</label>
+        <input type="number" class="form-input" id="follower-goal" placeholder="e.g. 10000">
+      </div>
+
+      <div class="copy-section">
+        <div class="copy-url" id="follower-url">Enter a channel name to generate URL...</div>
+        <button class="btn-copy" id="follower-copy">📋 Copy to OBS</button>
+      </div>
+    </div>
+
+    <!-- Chat Box placeholder -->
+    <div class="panel" id="panel-chat">
+      <h1 class="page-title">Chat Box</h1>
+      <p class="page-subtitle">Chat overlay for Twitch, Kick, and YouTube. Coming soon.</p>
+    </div>
+
+    <!-- Geo placeholder -->
+    <div class="panel" id="panel-geo">
+      <h1 class="page-title">Geo Location</h1>
+      <p class="page-subtitle">City, weather, and local time overlay. Coming soon.</p>
+    </div>
+
+    <!-- Sub count placeholder -->
+    <div class="panel" id="panel-subcount">
+      <h1 class="page-title">Sub Count</h1>
+      <p class="page-subtitle">Subscriber count with goal tracking. Requires login. Coming soon.</p>
+    </div>
+  </main>
+
+  <script>
+    const BASE = location.origin;
+
+    // Navigation
+    document.querySelectorAll('[data-tool]').forEach(el => {
+      el.addEventListener('click', () => {
+        const tool = el.dataset.tool;
+        document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+        document.querySelector(`.sidebar-item[data-tool="${tool}"]`)?.classList.add('active');
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.getElementById(`panel-${tool}`)?.classList.add('active');
+        history.replaceState(null, '', `?tool=${tool}`);
+      });
+    });
+
+    // Platform tabs
+    document.querySelectorAll('.platform-tabs').forEach(tabs => {
+      tabs.querySelectorAll('.platform-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabs.querySelectorAll('.platform-tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          updateUrls();
+        });
+      });
+    });
+
+    // Toggles
+    document.querySelectorAll('.toggle').forEach(t => {
+      t.addEventListener('click', () => {
+        t.classList.toggle('on');
+        if (t.id === 'follower-goal-toggle') {
+          document.getElementById('follower-goal-group').style.display = t.classList.contains('on') ? 'block' : 'none';
+        }
+        updateUrls();
+      });
+    });
+
+    // Sliders
+    document.querySelectorAll('input[type="range"]').forEach(s => {
+      const valEl = document.getElementById(s.id + '-val');
+      s.addEventListener('input', () => {
+        if (valEl) valEl.textContent = s.value + 'rem';
+        updateUrls();
+      });
+    });
+
+    // Inputs
+    document.querySelectorAll('.form-input, .form-select').forEach(el => {
+      el.addEventListener('input', updateUrls);
+      el.addEventListener('change', updateUrls);
+    });
+
+    function getActiveTab(tabsId) {
+      const active = document.querySelector(`#${tabsId} .platform-tab.active`);
+      return active ? active.dataset.val : '';
+    }
+
+    function updateUrls() {
+      // Timer
+      const timerMode = getActiveTab('timer-mode-tabs');
+      const timerDate = document.getElementById('timer-date')?.value;
+      const timerTime = document.getElementById('timer-time')?.value || '12:00';
+      const timerFont = document.getElementById('timer-font')?.value || 'mono';
+      const timerColor = document.getElementById('timer-color')?.value || '#ffffff';
+      const timerSize = document.getElementById('timer-size')?.value || '4';
+      const timerLabels = document.getElementById('timer-labels')?.classList.contains('on');
+
+      if (timerDate) {
+        const params = new URLSearchParams({
+          mode: timerMode, date: timerDate, time: timerTime,
+          font: timerFont, color: timerColor.replace('#',''), size: timerSize,
+          labels: timerLabels ? '1' : '0'
+        });
+        const url = `${BASE}/overlays/timer/?${params}`;
+        document.getElementById('timer-url').textContent = url;
+        document.getElementById('timer-preview').src = url;
+      }
+
+      // Viewer
+      const viewerPlatform = getActiveTab('viewer-platform-tabs');
+      const viewerChannel = document.getElementById('viewer-channel')?.value?.trim();
+      const viewerFont = document.getElementById('viewer-font')?.value || 'mono';
+      const viewerColor = document.getElementById('viewer-color')?.value || '#ffffff';
+      const viewerSize = document.getElementById('viewer-size')?.value || '4';
+      const viewerIcon = document.getElementById('viewer-icon')?.classList.contains('on');
+
+      if (viewerChannel) {
+        const params = new URLSearchParams({
+          platform: viewerPlatform, channel: viewerChannel,
+          font: viewerFont, color: viewerColor.replace('#',''), size: viewerSize,
+          icon: viewerIcon ? '1' : '0'
+        });
+        const url = `${BASE}/overlays/viewer/?${params}`;
+        document.getElementById('viewer-url').textContent = url;
+        document.getElementById('viewer-preview').src = url;
+      }
+
+      // Follower
+      const followerPlatform = getActiveTab('follower-platform-tabs');
+      const followerChannel = document.getElementById('follower-channel')?.value?.trim();
+      const followerFont = document.getElementById('follower-font')?.value || 'mono';
+      const followerColor = document.getElementById('follower-color')?.value || '#ffffff';
+      const followerGoalOn = document.getElementById('follower-goal-toggle')?.classList.contains('on');
+      const followerGoal = document.getElementById('follower-goal')?.value;
+
+      if (followerChannel) {
+        const params = new URLSearchParams({
+          platform: followerPlatform, channel: followerChannel,
+          font: followerFont, color: followerColor.replace('#','')
+        });
+        if (followerGoalOn && followerGoal) params.set('goal', followerGoal);
+        const url = `${BASE}/overlays/follower/?${params}`;
+        document.getElementById('follower-url').textContent = url;
+      }
+    }
+
+    // Copy buttons
+    document.querySelectorAll('.btn-copy').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const urlEl = btn.previousElementSibling;
+        const text = urlEl.textContent;
+        if (text.includes('Configure') || text.includes('Enter')) return;
+        navigator.clipboard.writeText(text).then(() => {
+          btn.textContent = '✅ Copied!';
+          btn.classList.add('copied');
+          setTimeout(() => {
+            btn.innerHTML = '📋 Copy to OBS';
+            btn.classList.remove('copied');
+          }, 2000);
+        });
+      });
+    });
+
+    // Init from URL params
+    const params = new URLSearchParams(location.search);
+    const initTool = params.get('tool');
+    if (initTool) {
+      document.querySelector(`[data-tool="${initTool}"]`)?.click();
+    }
+
+    // Set default date to tomorrow
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const dateInput = document.getElementById('timer-date');
+    if (dateInput) dateInput.value = tomorrow.toISOString().split('T')[0];
+
+    updateUrls();
+  </script>
+</body>
+</html>

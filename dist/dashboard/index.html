@@ -474,15 +474,15 @@
           </div>
           <div class="home-row" data-tool="chat">
             <span class="home-name">Chat Box</span>
-            <span class="home-desc">Coming soon</span>
+            <span class="home-desc">Twitch, Kick, YouTube</span>
           </div>
           <div class="home-row" data-tool="geo">
             <span class="home-name">Geo Location</span>
-            <span class="home-desc">Coming soon</span>
+            <span class="home-desc">City, time, weather</span>
           </div>
           <div class="home-row" data-tool="subcount">
             <span class="home-name">Sub Count</span>
-            <span class="home-desc">Requires login</span>
+            <span class="home-desc">With goal tracking</span>
           </div>
         </div>
       </div>
@@ -669,18 +669,217 @@
         </div>
       </div>
 
-      <!-- Stubs -->
+      <!-- Chat Box -->
       <div class="panel" id="panel-chat">
         <h1 class="page-title">Chat Box</h1>
-        <p class="page-subtitle">Chat overlay for Twitch, Kick, and YouTube. Coming soon.</p>
+        <p class="page-subtitle">Chat overlay with demo mode. Swap in real chat later.</p>
+
+        <div class="field">
+          <label class="field-label">Platform</label>
+          <div class="tabs" id="chat-platform-tabs">
+            <button class="tab active" data-val="twitch">Twitch</button>
+            <button class="tab" data-val="kick">Kick</button>
+            <button class="tab" data-val="youtube">YouTube</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Channel</label>
+          <input type="text" class="field-input" id="chat-channel" placeholder="channel name">
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Font</label>
+            <select class="field-select" id="chat-font">
+              <option value="mono">Monospace</option>
+              <option value="inter">Inter</option>
+              <option value="russo">Russo One</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Color</label>
+            <input type="color" class="field-input" id="chat-color" value="#e4e4e8" style="height:38px;padding:3px 6px;">
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Size</label>
+          <div class="slider-row">
+            <input type="range" min="0.5" max="3" step="0.1" value="1" id="chat-size">
+            <span class="slider-val" id="chat-size-val">1rem</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Max messages</label>
+          <input type="number" class="field-input" id="chat-max" value="8" min="1" max="30">
+        </div>
+
+        <div class="toggle-row">
+          <span class="toggle-text">Fade old messages</span>
+          <div class="toggle on" id="chat-fade"></div>
+        </div>
+
+        <div class="output">
+          <div class="output-label">OBS Browser Source URL</div>
+          <div class="output-url" id="chat-url">Enter a channel name</div>
+          <button class="btn-copy" id="chat-copy">Copy to OBS</button>
+        </div>
+
+        <div class="preview">
+          <div class="preview-header">
+            <span class="preview-label">Preview</span>
+          </div>
+          <div class="preview-frame" style="height:300px;">
+            <iframe id="chat-preview" style="height:300px;"></iframe>
+          </div>
+        </div>
       </div>
+
+      <!-- Geo Location -->
       <div class="panel" id="panel-geo">
         <h1 class="page-title">Geo Location</h1>
-        <p class="page-subtitle">City, weather, and local time overlay. Coming soon.</p>
+        <p class="page-subtitle">City, time, and weather overlay.</p>
+
+        <div class="field">
+          <label class="field-label">City</label>
+          <input type="text" class="field-input" id="geo-city" placeholder="Los Angeles">
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Timezone</label>
+            <input type="text" class="field-input" id="geo-timezone" placeholder="America/Los_Angeles">
+          </div>
+          <div class="field">
+            <label class="field-label">Units</label>
+            <div class="tabs" id="geo-units-tabs">
+              <button class="tab active" data-val="imperial">°F</button>
+              <button class="tab" data-val="metric">°C</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Font</label>
+            <select class="field-select" id="geo-font">
+              <option value="mono">Monospace</option>
+              <option value="inter">Inter</option>
+              <option value="russo">Russo One</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Color</label>
+            <input type="color" class="field-input" id="geo-color" value="#e4e4e8" style="height:38px;padding:3px 6px;">
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Size</label>
+          <div class="slider-row">
+            <input type="range" min="1" max="6" value="2" id="geo-size">
+            <span class="slider-val" id="geo-size-val">2rem</span>
+          </div>
+        </div>
+
+        <div class="toggle-row">
+          <span class="toggle-text">Show weather</span>
+          <div class="toggle on" id="geo-weather"></div>
+        </div>
+
+        <div class="toggle-row">
+          <span class="toggle-text">Show time</span>
+          <div class="toggle on" id="geo-time"></div>
+        </div>
+
+        <div class="output">
+          <div class="output-label">OBS Browser Source URL</div>
+          <div class="output-url" id="geo-url">Enter a city name</div>
+          <button class="btn-copy" id="geo-copy">Copy to OBS</button>
+        </div>
+
+        <div class="preview">
+          <div class="preview-header">
+            <span class="preview-label">Preview</span>
+          </div>
+          <div class="preview-frame">
+            <iframe id="geo-preview"></iframe>
+          </div>
+        </div>
       </div>
+
+      <!-- Sub Count -->
       <div class="panel" id="panel-subcount">
         <h1 class="page-title">Sub Count</h1>
-        <p class="page-subtitle">Subscriber count with goal tracking. Requires login. Coming soon.</p>
+        <p class="page-subtitle">Subscriber count with goal tracking. Demo mode for now.</p>
+
+        <div class="field">
+          <label class="field-label">Platform</label>
+          <div class="tabs" id="sub-platform-tabs">
+            <button class="tab active" data-val="twitch">Twitch</button>
+            <button class="tab" data-val="kick">Kick</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Channel</label>
+          <input type="text" class="field-input" id="sub-channel" placeholder="channel name">
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Font</label>
+            <select class="field-select" id="sub-font">
+              <option value="mono">Monospace</option>
+              <option value="inter">Inter</option>
+              <option value="russo">Russo One</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Color</label>
+            <input type="color" class="field-input" id="sub-color" value="#ffffff" style="height:38px;padding:3px 6px;">
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Size</label>
+          <div class="slider-row">
+            <input type="range" min="1" max="10" value="4" id="sub-size">
+            <span class="slider-val" id="sub-size-val">4rem</span>
+          </div>
+        </div>
+
+        <div class="toggle-row">
+          <span class="toggle-text">Show icon</span>
+          <div class="toggle on" id="sub-icon"></div>
+        </div>
+
+        <div class="toggle-row">
+          <span class="toggle-text">Show goal bar</span>
+          <div class="toggle" id="sub-goal-toggle"></div>
+        </div>
+
+        <div class="field" id="sub-goal-group" style="display:none;">
+          <label class="field-label">Goal</label>
+          <input type="number" class="field-input" id="sub-goal" placeholder="1000">
+        </div>
+
+        <div class="output">
+          <div class="output-label">OBS Browser Source URL</div>
+          <div class="output-url" id="sub-url">Enter a channel name</div>
+          <button class="btn-copy" id="sub-copy">Copy to OBS</button>
+        </div>
+
+        <div class="preview">
+          <div class="preview-header">
+            <span class="preview-label">Preview</span>
+          </div>
+          <div class="preview-frame">
+            <iframe id="sub-preview"></iframe>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -718,6 +917,9 @@
         t.classList.toggle('on');
         if (t.id === 'follower-goal-toggle') {
           document.getElementById('follower-goal-group').style.display = t.classList.contains('on') ? 'block' : 'none';
+        }
+        if (t.id === 'sub-goal-toggle') {
+          document.getElementById('sub-goal-group').style.display = t.classList.contains('on') ? 'block' : 'none';
         }
         updateUrls();
       });
@@ -789,6 +991,61 @@
         const gVal = document.getElementById('follower-goal')?.value;
         if (gOn && gVal) params.set('goal', gVal);
         document.getElementById('follower-url').textContent = `${BASE}/overlays/follower/?${params}`;
+      }
+
+      // Chat
+      const cc = document.getElementById('chat-channel')?.value?.trim();
+      if (cc) {
+        const params = new URLSearchParams({
+          platform: getTab('chat-platform-tabs'),
+          channel: cc,
+          font: document.getElementById('chat-font')?.value || 'mono',
+          color: (document.getElementById('chat-color')?.value || '#e4e4e8').replace('#',''),
+          size: document.getElementById('chat-size')?.value || '1',
+          max: document.getElementById('chat-max')?.value || '8',
+          fade: document.getElementById('chat-fade')?.classList.contains('on') ? '1' : '0'
+        });
+        const url = `${BASE}/overlays/chat/?${params}`;
+        document.getElementById('chat-url').textContent = url;
+        document.getElementById('chat-preview').src = url;
+      }
+
+      // Geo
+      const gc = document.getElementById('geo-city')?.value?.trim();
+      if (gc) {
+        const params = new URLSearchParams({
+          city: gc,
+          font: document.getElementById('geo-font')?.value || 'mono',
+          color: (document.getElementById('geo-color')?.value || '#e4e4e8').replace('#',''),
+          size: document.getElementById('geo-size')?.value || '2',
+          show_weather: document.getElementById('geo-weather')?.classList.contains('on') ? '1' : '0',
+          show_time: document.getElementById('geo-time')?.classList.contains('on') ? '1' : '0',
+          units: getTab('geo-units-tabs')
+        });
+        const tz = document.getElementById('geo-timezone')?.value?.trim();
+        if (tz) params.set('timezone', tz);
+        const url = `${BASE}/overlays/geo/?${params}`;
+        document.getElementById('geo-url').textContent = url;
+        document.getElementById('geo-preview').src = url;
+      }
+
+      // Sub Count
+      const sc = document.getElementById('sub-channel')?.value?.trim();
+      if (sc) {
+        const params = new URLSearchParams({
+          platform: getTab('sub-platform-tabs'),
+          channel: sc,
+          font: document.getElementById('sub-font')?.value || 'mono',
+          color: (document.getElementById('sub-color')?.value || '#ffffff').replace('#',''),
+          size: document.getElementById('sub-size')?.value || '4',
+          icon: document.getElementById('sub-icon')?.classList.contains('on') ? '1' : '0'
+        });
+        const sgOn = document.getElementById('sub-goal-toggle')?.classList.contains('on');
+        const sgVal = document.getElementById('sub-goal')?.value;
+        if (sgOn && sgVal) params.set('goal', sgVal);
+        const url = `${BASE}/overlays/subcount/?${params}`;
+        document.getElementById('sub-url').textContent = url;
+        document.getElementById('sub-preview').src = url;
       }
     }
 

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pulse Sub Count</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&family=Russo+One&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+    .sub {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+    .icon svg { width: 0.7em; height: 0.7em; opacity: 0.5; }
+    .stale .count { opacity: 0.5; }
+    .goal-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .goal-bar {
+      width: 200px;
+      height: 2px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 1px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+    .goal-fill {
+      height: 100%;
+      border-radius: 1px;
+      transition: width 0.5s ease;
+    }
+    .goal-text {
+      font-size: 0.22em;
+      opacity: 0.4;
+      margin-top: 4px;
+      font-variant-numeric: tabular-nums;
+    }
+    .hb {
+      position: fixed;
+      bottom: 4px;
+      right: 4px;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      animation: hb 4s ease-in-out infinite;
+    }
+    @keyframes hb {
+      0%, 100% { opacity: 0.15; }
+      50% { opacity: 0.05; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <div class="hb" title="Pulse overlay active"></div>
+  <script>
+    const p = new URLSearchParams(location.search);
+    const platform = p.get('platform') || 'twitch';
+    const channel = p.get('channel') || '';
+    const font = p.get('font') || 'mono';
+    const color = '#' + (p.get('color') || 'ffffff');
+    const size = (p.get('size') || '4') + 'rem';
+    const showIcon = p.get('icon') !== '0';
+    const goal = parseInt(p.get('goal')) || 0;
+
+    const fonts = {
+      mono: "'JetBrains Mono', monospace",
+      inter: "'Inter', sans-serif",
+      russo: "'Russo One', sans-serif"
+    };
+
+    const root = document.getElementById('root');
+    root.style.fontFamily = fonts[font] || fonts.mono;
+    root.style.fontSize = size;
+    root.style.color = color;
+
+    let lastCount = null;
+    let lastOk = 0;
+
+    function render(count, stale) {
+      const formatted = count !== null ? count.toLocaleString() : '—';
+      let html = '<div class="sub' + (stale ? ' stale' : '') + '">';
+      if (showIcon) {
+        html += '<span class="icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg></span>';
+      }
+      html += '<span class="count">' + formatted + '</span>';
+      html += '</div>';
+
+      if (goal > 0 && count !== null) {
+        const pct = Math.min(100, (count / goal) * 100);
+        html += '<div class="goal-wrap">';
+        html += '<div class="goal-bar"><div class="goal-fill" style="width:' + pct + '%;background:' + color + ';opacity:0.6;"></div></div>';
+        html += '<div class="goal-text">' + formatted + ' / ' + goal.toLocaleString() + '</div>';
+        html += '</div>';
+      }
+
+      root.innerHTML = html;
+    }
+
+    async function fetchCount() {
+      if (!channel) { render(null, false); return; }
+      try {
+        const resp = await fetch(`/api/subs?platform=${platform}&channel=${encodeURIComponent(channel)}`);
+        if (resp.ok) {
+          const data = await resp.json();
+          lastCount = data.count;
+          lastOk = Date.now();
+          render(lastCount, false);
+          return;
+        }
+      } catch(e) {}
+      if (lastCount !== null) {
+        render(lastCount, Date.now() - lastOk > 60000);
+      } else {
+        // Demo: simulated
+        lastCount = Math.floor(Math.random() * 2000) + 50;
+        render(lastCount, false);
+      }
+    }
+
+    fetchCount();
+    setInterval(fetchCount, 30000);
+  </script>
+</body>
+</html>

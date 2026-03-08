@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pulse Follower Count</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&family=JetBrains+Mono:wght@700&family=Russo+One&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: transparent;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .overlay {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.4em;
+      color: #ffffff;
+      transition: opacity 160ms ease;
+    }
+
+    .overlay.stale {
+      opacity: 0.5;
+    }
+
+    .count-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.24em;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .platform-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 0.92em;
+      height: 0.92em;
+      flex: 0 0 auto;
+    }
+
+    .platform-icon svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      fill: currentColor;
+    }
+
+    .count {
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.04em;
+    }
+
+    .goal {
+      width: 100%;
+      display: none;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.22em;
+    }
+
+    .goal.visible {
+      display: flex;
+    }
+
+    .goal-track {
+      width: 100%;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+    }
+
+    .goal-fill {
+      width: 0%;
+      height: 100%;
+      transition: width 220ms ease;
+    }
+
+    .goal-text {
+      font-size: 0.22em;
+      line-height: 1.2;
+      letter-spacing: 0.02em;
+      color: rgba(255, 255, 255, 0.48);
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .hb {
+      position: fixed;
+      bottom: 4px;
+      right: 4px;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.15);
+      animation: hb 4s ease-in-out infinite;
+    }
+
+    @keyframes hb {
+      0%, 100% { opacity: 0.15; }
+      50% { opacity: 0.05; }
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay" id="overlay">
+    <div class="count-row">
+      <span class="platform-icon" id="platform-icon" aria-hidden="true"></span>
+      <span class="count" id="count">---</span>
+    </div>
+    <div class="goal" id="goal-block">
+      <div class="goal-track" aria-hidden="true">
+        <div class="goal-fill" id="goal-fill"></div>
+      </div>
+      <div class="goal-text" id="goal-text"></div>
+    </div>
+  </div>
+  <div class="hb" title="Pulse overlay active"></div>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const platform = params.get('platform') === 'kick' ? 'kick' : 'twitch';
+    const channel = (params.get('channel') || '').trim();
+    const font = params.get('font') || 'mono';
+    const colorParam = (params.get('color') || 'ffffff').replace(/[^0-9a-f]/gi, '').slice(0, 6);
+    const color = `#${colorParam || 'ffffff'}`;
+    const parsedSize = Number(params.get('size') || '4');
+    const sizeRem = Number.isFinite(parsedSize) && parsedSize > 0 ? parsedSize : 4;
+    const goalValue = Number(params.get('goal'));
+    const showGoal = Number.isFinite(goalValue) && goalValue > 0;
+    const showIcon = params.get('icon') !== '0';
+
+    const fonts = {
+      mono: "'JetBrains Mono', monospace",
+      inter: "'Inter', sans-serif",
+      russo: "'Russo One', sans-serif"
+    };
+
+    const icons = {
+      twitch: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg>',
+      kick: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.333 0v24h5.338V14.68l2.66-2.67 5.338 12h5.998L13.33 9.34 20.667 0h-5.998l-5.998 7.33V0z"/></svg>'
+    };
+
+    const overlayEl = document.getElementById('overlay');
+    const countEl = document.getElementById('count');
+    const iconEl = document.getElementById('platform-icon');
+    const goalBlockEl = document.getElementById('goal-block');
+    const goalFillEl = document.getElementById('goal-fill');
+    const goalTextEl = document.getElementById('goal-text');
+
+    overlayEl.style.fontFamily = fonts[font] || fonts.mono;
+    overlayEl.style.fontSize = `${sizeRem}rem`;
+    overlayEl.style.color = color;
+
+    if (showIcon && icons[platform]) {
+      iconEl.innerHTML = icons[platform];
+    } else {
+      iconEl.remove();
+    }
+
+    if (showGoal) {
+      goalBlockEl.classList.add('visible');
+    }
+
+    let lastKnownCount = null;
+    let lastSuccessfulFetchAt = 0;
+    let simulatedCount = Math.floor(Math.random() * 49001) + 1000;
+
+    function hexToRgb(hex) {
+      const normalized = hex.replace('#', '');
+      const expanded = normalized.length === 3
+        ? normalized.split('').map((char) => char + char).join('')
+        : normalized.padEnd(6, '0').slice(0, 6);
+
+      return {
+        r: parseInt(expanded.slice(0, 2), 16),
+        g: parseInt(expanded.slice(2, 4), 16),
+        b: parseInt(expanded.slice(4, 6), 16)
+      };
+    }
+
+    function formatCount(value) {
+      return Number.isFinite(value) ? value.toLocaleString() : '---';
+    }
+
+    function isDataStale() {
+      return lastSuccessfulFetchAt > 0 && Date.now() - lastSuccessfulFetchAt > 60000;
+    }
+
+    function renderGoal(count) {
+      if (!showGoal) {
+        return;
+      }
+
+      const progress = Math.max(0, Math.min(count / goalValue, 1));
+      const fillColor = hexToRgb(color);
+      goalFillEl.style.width = `${progress * 100}%`;
+      goalFillEl.style.background = `rgba(${fillColor.r}, ${fillColor.g}, ${fillColor.b}, 0.6)`;
+      goalTextEl.textContent = `${formatCount(count)} / ${formatCount(goalValue)}`;
+    }
+
+    function render() {
+      countEl.textContent = formatCount(lastKnownCount);
+      overlayEl.classList.toggle('stale', isDataStale());
+
+      if (lastKnownCount !== null) {
+        renderGoal(lastKnownCount);
+      }
+    }
+
+    async function fetchFollowerCount(source) {
+      // Replace this with a real platform/channel API call when credentials are available.
+      const drift = Math.floor(Math.random() * 1801) - 900;
+      simulatedCount = Math.max(1000, Math.min(50000, simulatedCount + drift));
+      return simulatedCount;
+    }
+
+    async function refreshFollowerCount() {
+      try {
+        const count = await fetchFollowerCount({ platform, channel });
+        if (!Number.isFinite(count)) {
+          throw new Error('Follower count must be numeric.');
+        }
+
+        lastKnownCount = Math.round(count);
+        lastSuccessfulFetchAt = Date.now();
+        render();
+      } catch (error) {
+        console.warn('Follower count refresh failed.', error);
+        if (lastKnownCount !== null) {
+          render();
+        }
+      }
+    }
+
+    render();
+    refreshFollowerCount();
+    window.setInterval(refreshFollowerCount, 30000);
+  </script>
+</body>
+</html>

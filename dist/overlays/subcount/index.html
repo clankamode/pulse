@@ -115,7 +115,7 @@
     async function fetchCount() {
       if (!channel) { render(null, false); return; }
       try {
-        const resp = await fetch(`/api/subs?platform=${platform}&channel=${encodeURIComponent(channel)}`);
+        const resp = await fetch(`https://pulse-api.clankamode.workers.dev/api/subs?platform=${platform}&channel=${encodeURIComponent(channel)}`);
         if (resp.ok) {
           const data = await resp.json();
           lastCount = data.count;

@@ -114,7 +114,7 @@
 
       try {
         // Try our API proxy first
-        const resp = await fetch(`/api/viewers?platform=${platform}&channel=${encodeURIComponent(channel)}`);
+        const resp = await fetch(`https://pulse-api.clankamode.workers.dev/api/viewers?platform=${platform}&channel=${encodeURIComponent(channel)}`);
         if (resp.ok) {
           const data = await resp.json();
           lastCount = data.count;

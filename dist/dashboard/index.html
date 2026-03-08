@@ -3,28 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard — Pulse</title>
+  <title>Pulse — Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0a0a0b;
-      --bg-elevated: #111113;
-      --bg-card: #16161a;
-      --border: #222228;
-      --text: #e8e8ed;
-      --text-muted: #7a7a85;
-      --accent: #00ff88;
-      --accent-dim: #00cc6a;
-      --accent-glow: rgba(0, 255, 136, 0.15);
-      --orange: #ff8844;
-      --radius: 12px;
-      --radius-sm: 8px;
+      --bg: #0c0c0d;
+      --surface: #131315;
+      --surface-2: #1a1a1d;
+      --border: #1f1f23;
+      --text: #c8c8cc;
+      --text-secondary: #6b6b73;
+      --text-dim: #44444a;
+      --white: #e4e4e8;
+      --focus: rgba(255,255,255,0.06);
+      --focus-strong: rgba(255,255,255,0.09);
     }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
+
     body {
-      font-family: 'Inter', -apple-system, sans-serif;
+      font-family: 'Inter', -apple-system, system-ui, sans-serif;
       background: var(--bg);
       color: var(--text);
       line-height: 1.6;
@@ -33,12 +33,14 @@
       min-height: 100vh;
     }
 
-    /* Sidebar */
+    ::selection { background: rgba(255,255,255,0.1); }
+
+    /* --- Sidebar: navigation recedes --- */
     .sidebar {
-      width: 240px;
-      background: var(--bg-elevated);
+      width: 200px;
+      background: var(--surface);
       border-right: 1px solid var(--border);
-      padding: 20px 0;
+      padding: 16px 0;
       flex-shrink: 0;
       position: fixed;
       top: 0;
@@ -48,202 +50,205 @@
     }
 
     .sidebar-logo {
-      padding: 0 20px 20px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: 800;
-      font-size: 1.2rem;
+      display: block;
+      padding: 0 16px 16px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
       text-decoration: none;
-      color: var(--text);
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 12px;
+      letter-spacing: -0.01em;
+      transition: color 0.2s;
     }
 
-    .logo-dot {
-      width: 8px;
-      height: 8px;
-      background: var(--accent);
-      border-radius: 50%;
-      animation: pulse-dot 2s ease-in-out infinite;
-      box-shadow: 0 0 8px var(--accent);
-    }
-
-    @keyframes pulse-dot {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.6; transform: scale(0.85); }
-    }
+    .sidebar-logo:hover { color: var(--white); }
 
     .sidebar-section {
-      padding: 0 12px;
-      margin-bottom: 8px;
+      padding: 0 8px;
+      margin-top: 8px;
     }
 
-    .sidebar-section-label {
-      font-size: 0.7rem;
-      font-weight: 600;
+    .sidebar-label {
+      font-size: 0.65rem;
+      font-weight: 500;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: var(--text-muted);
-      padding: 8px 8px 4px;
+      color: var(--text-dim);
+      padding: 8px 8px 6px;
     }
 
     .sidebar-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
-      border-radius: var(--radius-sm);
+      display: block;
+      width: 100%;
+      padding: 7px 10px;
+      border-radius: 5px;
+      font-size: 0.82rem;
+      font-weight: 450;
+      color: var(--text-dim);
       cursor: pointer;
-      font-size: 0.9rem;
-      font-weight: 500;
-      color: var(--text-muted);
-      transition: all 0.15s;
       border: none;
       background: none;
-      width: 100%;
       text-align: left;
       font-family: inherit;
+      transition: all 0.12s;
+      letter-spacing: 0.005em;
     }
 
-    .sidebar-item:hover { color: var(--text); background: rgba(255,255,255,0.04); }
-    .sidebar-item.active { color: var(--accent); background: var(--accent-glow); }
+    .sidebar-item:hover {
+      color: var(--text-secondary);
+      background: var(--focus);
+    }
 
-    .sidebar-item .icon { font-size: 1.1rem; width: 24px; text-align: center; }
+    .sidebar-item.active {
+      color: var(--text);
+      background: var(--focus-strong);
+    }
 
-    /* Main */
+    /* --- Main: the work holds gravity --- */
     .main {
       flex: 1;
-      margin-left: 240px;
-      padding: 32px;
-      max-width: 900px;
+      margin-left: 200px;
+      display: flex;
+      justify-content: center;
+      padding: 48px 32px 80px;
+    }
+
+    .content {
+      width: 100%;
+      max-width: 560px;
     }
 
     .page-title {
-      font-size: 1.6rem;
-      font-weight: 800;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--white);
+      letter-spacing: -0.01em;
       margin-bottom: 4px;
     }
 
     .page-subtitle {
-      color: var(--text-muted);
-      font-size: 0.95rem;
-      margin-bottom: 32px;
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      margin-bottom: 36px;
     }
 
-    /* Tool config panels */
+    /* --- Panels --- */
     .panel { display: none; }
     .panel.active { display: block; }
 
-    /* Form elements */
-    .form-group {
+    /* --- Form elements: quiet, precise --- */
+    .field {
       margin-bottom: 20px;
     }
 
-    .form-label {
+    .field-label {
       display: block;
-      font-size: 0.8rem;
-      font-weight: 600;
+      font-size: 0.72rem;
+      font-weight: 500;
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      color: var(--text-muted);
+      color: var(--text-dim);
       margin-bottom: 6px;
     }
 
-    .form-input, .form-select {
+    .field-input, .field-select {
       width: 100%;
-      padding: 10px 14px;
-      background: var(--bg);
+      padding: 9px 12px;
+      background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
+      border-radius: 6px;
       color: var(--text);
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       font-family: inherit;
       outline: none;
-      transition: border-color 0.2s;
+      transition: border-color 0.15s;
     }
 
-    .form-input:focus, .form-select:focus {
-      border-color: var(--accent);
+    .field-input:focus, .field-select:focus {
+      border-color: #2a2a30;
     }
 
-    .form-input::placeholder { color: var(--text-muted); }
+    .field-input::placeholder { color: var(--text-dim); }
 
-    .form-row {
+    .field-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px;
+      gap: 12px;
     }
 
-    .form-row-3 {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 16px;
-    }
-
-    /* Platform tabs */
-    .platform-tabs {
+    /* Tabs: structural, not flashy */
+    .tabs {
       display: flex;
-      gap: 0;
-      margin-bottom: 20px;
-      border-radius: var(--radius-sm);
+      border-radius: 6px;
       overflow: hidden;
       border: 1px solid var(--border);
     }
 
-    .platform-tab {
+    .tab {
       flex: 1;
-      padding: 10px 16px;
+      padding: 8px 12px;
       text-align: center;
-      font-size: 0.85rem;
-      font-weight: 600;
+      font-size: 0.8rem;
+      font-weight: 500;
       cursor: pointer;
-      background: var(--bg);
-      color: var(--text-muted);
+      background: var(--surface);
+      color: var(--text-dim);
       border: none;
       font-family: inherit;
-      transition: all 0.15s;
+      transition: all 0.12s;
     }
 
-    .platform-tab:not(:last-child) { border-right: 1px solid var(--border); }
-    .platform-tab.active { background: var(--accent); color: #000; }
-    .platform-tab:hover:not(.active) { color: var(--text); background: var(--bg-card); }
+    .tab:not(:last-child) { border-right: 1px solid var(--border); }
+
+    .tab.active {
+      background: var(--surface-2);
+      color: var(--text);
+    }
+
+    .tab:hover:not(.active) {
+      color: var(--text-secondary);
+    }
 
     /* Toggle */
     .toggle-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 8px 0;
+      padding: 6px 0;
     }
 
-    .toggle-label { font-size: 0.9rem; font-weight: 500; }
+    .toggle-text {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+    }
 
     .toggle {
-      width: 44px;
-      height: 24px;
+      width: 36px;
+      height: 20px;
       background: var(--border);
-      border-radius: 12px;
+      border-radius: 10px;
       position: relative;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: background 0.15s;
     }
 
-    .toggle.on { background: var(--accent); }
+    .toggle.on { background: var(--text-dim); }
 
     .toggle::after {
       content: '';
       position: absolute;
       top: 2px;
       left: 2px;
-      width: 20px;
-      height: 20px;
-      background: white;
+      width: 16px;
+      height: 16px;
+      background: var(--text-secondary);
       border-radius: 50%;
-      transition: transform 0.2s;
+      transition: all 0.15s;
     }
 
-    .toggle.on::after { transform: translateX(20px); }
+    .toggle.on::after {
+      transform: translateX(16px);
+      background: var(--white);
+    }
 
     /* Slider */
     .slider-row {
@@ -255,79 +260,90 @@
     input[type="range"] {
       flex: 1;
       -webkit-appearance: none;
-      height: 4px;
+      height: 2px;
       background: var(--border);
-      border-radius: 2px;
+      border-radius: 1px;
       outline: none;
     }
 
     input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
-      width: 16px;
-      height: 16px;
-      background: var(--accent);
+      width: 14px;
+      height: 14px;
+      background: var(--text-secondary);
       border-radius: 50%;
       cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      background: var(--text);
     }
 
     .slider-val {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      min-width: 48px;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      min-width: 40px;
       text-align: right;
     }
 
-    /* Copy button */
-    .copy-section {
-      margin-top: 28px;
-      padding: 20px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
+    /* --- Output: the generated URL --- */
+    .output {
+      margin-top: 32px;
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
     }
 
-    .copy-url {
+    .output-label {
+      font-size: 0.65rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+
+    .output-url {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.8rem;
-      color: var(--text-muted);
+      font-size: 0.75rem;
+      color: var(--text-dim);
       word-break: break-all;
-      margin-bottom: 12px;
-      padding: 10px;
-      background: var(--bg);
-      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      background: var(--surface);
       border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-bottom: 12px;
+      line-height: 1.5;
     }
 
     .btn-copy {
       width: 100%;
-      padding: 14px;
-      background: var(--accent);
-      color: #000;
-      border: none;
-      border-radius: var(--radius-sm);
-      font-weight: 700;
-      font-size: 0.95rem;
+      padding: 10px;
+      background: var(--surface-2);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-weight: 500;
+      font-size: 0.82rem;
       cursor: pointer;
       font-family: inherit;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
+      transition: all 0.15s;
+      letter-spacing: 0.005em;
     }
 
     .btn-copy:hover {
-      background: #33ffaa;
-      box-shadow: 0 0 24px var(--accent-glow);
+      color: var(--white);
+      background: var(--focus-strong);
+      border-color: #2a2a30;
     }
 
     .btn-copy.copied {
-      background: var(--accent-dim);
+      color: var(--text-dim);
     }
 
-    /* Preview */
-    .preview-section {
+    /* --- Preview: summoned, not persistent --- */
+    .preview {
       margin-top: 24px;
     }
 
@@ -335,352 +351,345 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }
 
     .preview-label {
-      font-size: 0.8rem;
-      font-weight: 600;
+      font-size: 0.65rem;
+      font-weight: 500;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--accent);
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
     }
-
-    .preview-toggle {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      cursor: pointer;
-      background: none;
-      border: none;
-      font-family: inherit;
-    }
-
-    .preview-toggle:hover { color: var(--text); }
 
     .preview-frame {
-      background: var(--bg-card);
+      background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      min-height: 120px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      border-radius: 6px;
       overflow: hidden;
     }
 
     .preview-frame iframe {
       width: 100%;
-      height: 200px;
+      height: 160px;
       border: none;
+      display: block;
     }
 
-    /* Dashboard home cards */
-    .dash-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 12px;
+    /* --- Dashboard home --- */
+    .home-list {
+      display: flex;
+      flex-direction: column;
     }
 
-    .dash-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 24px;
+    .home-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      padding: 12px 10px;
+      margin: 0 -10px;
+      border-radius: 5px;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: background 0.12s;
     }
 
-    .dash-card:hover {
-      border-color: var(--accent);
-      box-shadow: 0 0 20px var(--accent-glow);
+    .home-row:hover { background: var(--focus); }
+
+    .home-row + .home-row { border-top: 1px solid var(--border); }
+
+    .home-name {
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: color 0.12s;
     }
 
-    .dash-card .icon { font-size: 1.5rem; margin-bottom: 10px; }
-    .dash-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
-    .dash-card p { font-size: 0.85rem; color: var(--text-muted); }
+    .home-row:hover .home-name { color: var(--white); }
 
-    @media (max-width: 768px) {
+    .home-desc {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      margin-left: 16px;
+      flex-shrink: 0;
+    }
+
+    .home-tag {
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      margin-left: 8px;
+      opacity: 0.6;
+    }
+
+    /* Separator */
+    .sep {
+      border-top: 1px solid var(--border);
+      margin: 24px 0;
+    }
+
+    /* --- Responsive --- */
+    @media (max-width: 700px) {
       .sidebar { display: none; }
-      .main { margin-left: 0; padding: 20px 16px; }
-      .form-row, .form-row-3 { grid-template-columns: 1fr; }
+      .main { margin-left: 0; padding: 32px 20px 80px; }
+      .field-row { grid-template-columns: 1fr; }
+      .home-desc { display: none; }
     }
   </style>
 </head>
 <body>
   <aside class="sidebar">
-    <a href="/" class="sidebar-logo">
-      <span class="logo-dot"></span>
-      Pulse
-    </a>
+    <a href="/" class="sidebar-logo">Pulse</a>
     <div class="sidebar-section">
-      <button class="sidebar-item active" data-tool="home">
-        <span class="icon">⌂</span> Dashboard
-      </button>
+      <button class="sidebar-item active" data-tool="home">Dashboard</button>
     </div>
     <div class="sidebar-section">
-      <div class="sidebar-section-label">Overlay Tools</div>
-      <button class="sidebar-item" data-tool="timer">
-        <span class="icon">⏱</span> Timer
-      </button>
-      <button class="sidebar-item" data-tool="viewer">
-        <span class="icon">👁</span> Viewer Count
-      </button>
-      <button class="sidebar-item" data-tool="follower">
-        <span class="icon">💚</span> Follower Count
-      </button>
-      <button class="sidebar-item" data-tool="chat">
-        <span class="icon">💬</span> Chat Box
-      </button>
-      <button class="sidebar-item" data-tool="geo">
-        <span class="icon">📍</span> Geo Location
-      </button>
-      <button class="sidebar-item" data-tool="subcount">
-        <span class="icon">⭐</span> Sub Count
-      </button>
+      <div class="sidebar-label">Tools</div>
+      <button class="sidebar-item" data-tool="timer">Timer</button>
+      <button class="sidebar-item" data-tool="viewer">Viewer Count</button>
+      <button class="sidebar-item" data-tool="follower">Follower Count</button>
+      <button class="sidebar-item" data-tool="chat">Chat Box</button>
+      <button class="sidebar-item" data-tool="geo">Geo Location</button>
+      <button class="sidebar-item" data-tool="subcount">Sub Count</button>
     </div>
   </aside>
 
   <main class="main">
-    <!-- Home -->
-    <div class="panel active" id="panel-home">
-      <h1 class="page-title">Welcome to Pulse</h1>
-      <p class="page-subtitle">Pick a tool to generate an overlay URL for OBS.</p>
-      <div class="dash-grid">
-        <div class="dash-card" data-tool="timer">
-          <div class="icon">⏱</div>
-          <h3>Timer</h3>
-          <p>Count up or down for subathons, events, and milestones.</p>
-        </div>
-        <div class="dash-card" data-tool="viewer">
-          <div class="icon">👁</div>
-          <h3>Viewer Count</h3>
-          <p>Live viewer count for Twitch, YouTube, Kick, or combined.</p>
-        </div>
-        <div class="dash-card" data-tool="follower">
-          <div class="icon">💚</div>
-          <h3>Follower Count</h3>
-          <p>Follower count with optional goal display.</p>
-        </div>
-        <div class="dash-card" data-tool="chat">
-          <div class="icon">💬</div>
-          <h3>Chat Box</h3>
-          <p>Chat overlay for Twitch, Kick, and YouTube.</p>
-        </div>
-        <div class="dash-card" data-tool="geo">
-          <div class="icon">📍</div>
-          <h3>Geo Location</h3>
-          <p>City, weather, and local time on stream.</p>
-        </div>
-        <div class="dash-card" data-tool="subcount">
-          <div class="icon">⭐</div>
-          <h3>Sub Count</h3>
-          <p>Subscriber count with goal tracking.</p>
-        </div>
-      </div>
-    </div>
+    <div class="content">
 
-    <!-- Timer -->
-    <div class="panel" id="panel-timer">
-      <h1 class="page-title">Timer</h1>
-      <p class="page-subtitle">Count up or down timer overlay for OBS.</p>
-
-      <div class="form-group">
-        <label class="form-label">Mode</label>
-        <div class="platform-tabs" id="timer-mode-tabs">
-          <button class="platform-tab active" data-val="down">Count Down</button>
-          <button class="platform-tab" data-val="up">Count Up</button>
+      <!-- Home -->
+      <div class="panel active" id="panel-home">
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle">Pick a tool to configure an overlay.</p>
+        <div class="home-list">
+          <div class="home-row" data-tool="timer">
+            <span class="home-name">Timer</span>
+            <span class="home-desc">Count up or down</span>
+          </div>
+          <div class="home-row" data-tool="viewer">
+            <span class="home-name">Viewer Count</span>
+            <span class="home-desc">Twitch, YouTube, Kick</span>
+          </div>
+          <div class="home-row" data-tool="follower">
+            <span class="home-name">Follower Count</span>
+            <span class="home-desc">With optional goal</span>
+          </div>
+          <div class="home-row" data-tool="chat">
+            <span class="home-name">Chat Box</span>
+            <span class="home-desc">Coming soon</span>
+          </div>
+          <div class="home-row" data-tool="geo">
+            <span class="home-name">Geo Location</span>
+            <span class="home-desc">Coming soon</span>
+          </div>
+          <div class="home-row" data-tool="subcount">
+            <span class="home-name">Sub Count</span>
+            <span class="home-desc">Requires login</span>
+          </div>
         </div>
       </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Date</label>
-          <input type="date" class="form-input" id="timer-date">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Time</label>
-          <input type="time" class="form-input" id="timer-time" value="12:00">
-        </div>
-      </div>
+      <!-- Timer -->
+      <div class="panel" id="panel-timer">
+        <h1 class="page-title">Timer</h1>
+        <p class="page-subtitle">Count up or down overlay for OBS.</p>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Font</label>
-          <select class="form-select" id="timer-font">
-            <option value="mono">Monospace</option>
-            <option value="inter">Inter</option>
-            <option value="russo">Russo One</option>
-          </select>
+        <div class="field">
+          <label class="field-label">Mode</label>
+          <div class="tabs" id="timer-mode-tabs">
+            <button class="tab active" data-val="down">Count Down</button>
+            <button class="tab" data-val="up">Count Up</button>
+          </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Color</label>
-          <input type="color" class="form-input" id="timer-color" value="#ffffff" style="height:42px;padding:4px;">
+
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Date</label>
+            <input type="date" class="field-input" id="timer-date">
+          </div>
+          <div class="field">
+            <label class="field-label">Time</label>
+            <input type="time" class="field-input" id="timer-time" value="12:00">
+          </div>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label class="form-label">Font Size</label>
-        <div class="slider-row">
-          <input type="range" min="1" max="10" value="4" id="timer-size">
-          <span class="slider-val" id="timer-size-val">4rem</span>
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Font</label>
+            <select class="field-select" id="timer-font">
+              <option value="mono">Monospace</option>
+              <option value="inter">Inter</option>
+              <option value="russo">Russo One</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Color</label>
+            <input type="color" class="field-input" id="timer-color" value="#ffffff" style="height:38px;padding:3px 6px;">
+          </div>
         </div>
-      </div>
 
-      <div class="toggle-row">
-        <span class="toggle-label">Show Labels (Hours / Minutes / Seconds)</span>
-        <div class="toggle on" id="timer-labels"></div>
-      </div>
-
-      <div class="copy-section">
-        <div class="copy-url" id="timer-url">Configure timer to generate URL...</div>
-        <button class="btn-copy" id="timer-copy">📋 Copy to OBS</button>
-      </div>
-
-      <div class="preview-section">
-        <div class="preview-header">
-          <span class="preview-label">Live Preview</span>
+        <div class="field">
+          <label class="field-label">Size</label>
+          <div class="slider-row">
+            <input type="range" min="1" max="10" value="4" id="timer-size">
+            <span class="slider-val" id="timer-size-val">4rem</span>
+          </div>
         </div>
-        <div class="preview-frame">
-          <iframe id="timer-preview"></iframe>
+
+        <div class="toggle-row">
+          <span class="toggle-text">Show labels</span>
+          <div class="toggle on" id="timer-labels"></div>
         </div>
-      </div>
-    </div>
 
-    <!-- Viewer Count -->
-    <div class="panel" id="panel-viewer">
-      <h1 class="page-title">Viewer Count</h1>
-      <p class="page-subtitle">Display live viewer count in OBS. No login required.</p>
-
-      <div class="form-group">
-        <label class="form-label">Platform</label>
-        <div class="platform-tabs" id="viewer-platform-tabs">
-          <button class="platform-tab active" data-val="twitch">Twitch</button>
-          <button class="platform-tab" data-val="youtube">YouTube</button>
-          <button class="platform-tab" data-val="kick">Kick</button>
-          <button class="platform-tab" data-val="combined">Combined</button>
+        <div class="output">
+          <div class="output-label">OBS Browser Source URL</div>
+          <div class="output-url" id="timer-url">Set a date to generate URL</div>
+          <button class="btn-copy" id="timer-copy">Copy to OBS</button>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label class="form-label">Channel Name</label>
-        <input type="text" class="form-input" id="viewer-channel" placeholder="e.g. ninja">
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Font</label>
-          <select class="form-select" id="viewer-font">
-            <option value="mono">Monospace</option>
-            <option value="inter">Inter</option>
-            <option value="russo">Russo One</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Color</label>
-          <input type="color" class="form-input" id="viewer-color" value="#ffffff" style="height:42px;padding:4px;">
+        <div class="preview">
+          <div class="preview-header">
+            <span class="preview-label">Preview</span>
+          </div>
+          <div class="preview-frame">
+            <iframe id="timer-preview"></iframe>
+          </div>
         </div>
       </div>
 
-      <div class="form-group">
-        <label class="form-label">Font Size</label>
-        <div class="slider-row">
-          <input type="range" min="1" max="10" value="4" id="viewer-size">
-          <span class="slider-val" id="viewer-size-val">4rem</span>
+      <!-- Viewer Count -->
+      <div class="panel" id="panel-viewer">
+        <h1 class="page-title">Viewer Count</h1>
+        <p class="page-subtitle">Live viewer count overlay. No login required.</p>
+
+        <div class="field">
+          <label class="field-label">Platform</label>
+          <div class="tabs" id="viewer-platform-tabs">
+            <button class="tab active" data-val="twitch">Twitch</button>
+            <button class="tab" data-val="youtube">YouTube</button>
+            <button class="tab" data-val="kick">Kick</button>
+            <button class="tab" data-val="combined">Combined</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Channel</label>
+          <input type="text" class="field-input" id="viewer-channel" placeholder="channel name">
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Font</label>
+            <select class="field-select" id="viewer-font">
+              <option value="mono">Monospace</option>
+              <option value="inter">Inter</option>
+              <option value="russo">Russo One</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Color</label>
+            <input type="color" class="field-input" id="viewer-color" value="#ffffff" style="height:38px;padding:3px 6px;">
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Size</label>
+          <div class="slider-row">
+            <input type="range" min="1" max="10" value="4" id="viewer-size">
+            <span class="slider-val" id="viewer-size-val">4rem</span>
+          </div>
+        </div>
+
+        <div class="toggle-row">
+          <span class="toggle-text">Platform icon</span>
+          <div class="toggle on" id="viewer-icon"></div>
+        </div>
+
+        <div class="output">
+          <div class="output-label">OBS Browser Source URL</div>
+          <div class="output-url" id="viewer-url">Enter a channel name</div>
+          <button class="btn-copy" id="viewer-copy">Copy to OBS</button>
+        </div>
+
+        <div class="preview">
+          <div class="preview-header">
+            <span class="preview-label">Preview</span>
+          </div>
+          <div class="preview-frame">
+            <iframe id="viewer-preview"></iframe>
+          </div>
         </div>
       </div>
 
-      <div class="toggle-row">
-        <span class="toggle-label">Show Platform Icon</span>
-        <div class="toggle on" id="viewer-icon"></div>
-      </div>
+      <!-- Follower Count -->
+      <div class="panel" id="panel-follower">
+        <h1 class="page-title">Follower Count</h1>
+        <p class="page-subtitle">Follower count with optional goal bar.</p>
 
-      <div class="copy-section">
-        <div class="copy-url" id="viewer-url">Enter a channel name to generate URL...</div>
-        <button class="btn-copy" id="viewer-copy">📋 Copy to OBS</button>
-      </div>
-
-      <div class="preview-section">
-        <div class="preview-header">
-          <span class="preview-label">Live Preview</span>
+        <div class="field">
+          <label class="field-label">Platform</label>
+          <div class="tabs" id="follower-platform-tabs">
+            <button class="tab active" data-val="twitch">Twitch</button>
+            <button class="tab" data-val="kick">Kick</button>
+          </div>
         </div>
-        <div class="preview-frame">
-          <iframe id="viewer-preview"></iframe>
+
+        <div class="field">
+          <label class="field-label">Channel</label>
+          <input type="text" class="field-input" id="follower-channel" placeholder="channel name">
         </div>
-      </div>
-    </div>
 
-    <!-- Follower Count -->
-    <div class="panel" id="panel-follower">
-      <h1 class="page-title">Follower Count</h1>
-      <p class="page-subtitle">Show your follower count with optional goal bar.</p>
-
-      <div class="form-group">
-        <label class="form-label">Platform</label>
-        <div class="platform-tabs" id="follower-platform-tabs">
-          <button class="platform-tab active" data-val="twitch">Twitch</button>
-          <button class="platform-tab" data-val="kick">Kick</button>
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Font</label>
+            <select class="field-select" id="follower-font">
+              <option value="mono">Monospace</option>
+              <option value="inter">Inter</option>
+              <option value="russo">Russo One</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Color</label>
+            <input type="color" class="field-input" id="follower-color" value="#ffffff" style="height:38px;padding:3px 6px;">
+          </div>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label class="form-label">Channel Name</label>
-        <input type="text" class="form-input" id="follower-channel" placeholder="e.g. ninja">
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Font</label>
-          <select class="form-select" id="follower-font">
-            <option value="mono">Monospace</option>
-            <option value="inter">Inter</option>
-            <option value="russo">Russo One</option>
-          </select>
+        <div class="toggle-row">
+          <span class="toggle-text">Show goal bar</span>
+          <div class="toggle" id="follower-goal-toggle"></div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Color</label>
-          <input type="color" class="form-input" id="follower-color" value="#ffffff" style="height:42px;padding:4px;">
+
+        <div class="field" id="follower-goal-group" style="display:none;">
+          <label class="field-label">Goal</label>
+          <input type="number" class="field-input" id="follower-goal" placeholder="10000">
+        </div>
+
+        <div class="output">
+          <div class="output-label">OBS Browser Source URL</div>
+          <div class="output-url" id="follower-url">Enter a channel name</div>
+          <button class="btn-copy" id="follower-copy">Copy to OBS</button>
         </div>
       </div>
 
-      <div class="toggle-row">
-        <span class="toggle-label">Show Goal Bar</span>
-        <div class="toggle" id="follower-goal-toggle"></div>
+      <!-- Stubs -->
+      <div class="panel" id="panel-chat">
+        <h1 class="page-title">Chat Box</h1>
+        <p class="page-subtitle">Chat overlay for Twitch, Kick, and YouTube. Coming soon.</p>
+      </div>
+      <div class="panel" id="panel-geo">
+        <h1 class="page-title">Geo Location</h1>
+        <p class="page-subtitle">City, weather, and local time overlay. Coming soon.</p>
+      </div>
+      <div class="panel" id="panel-subcount">
+        <h1 class="page-title">Sub Count</h1>
+        <p class="page-subtitle">Subscriber count with goal tracking. Requires login. Coming soon.</p>
       </div>
 
-      <div class="form-group" id="follower-goal-group" style="display:none;">
-        <label class="form-label">Goal (follower count)</label>
-        <input type="number" class="form-input" id="follower-goal" placeholder="e.g. 10000">
-      </div>
-
-      <div class="copy-section">
-        <div class="copy-url" id="follower-url">Enter a channel name to generate URL...</div>
-        <button class="btn-copy" id="follower-copy">📋 Copy to OBS</button>
-      </div>
-    </div>
-
-    <!-- Chat Box placeholder -->
-    <div class="panel" id="panel-chat">
-      <h1 class="page-title">Chat Box</h1>
-      <p class="page-subtitle">Chat overlay for Twitch, Kick, and YouTube. Coming soon.</p>
-    </div>
-
-    <!-- Geo placeholder -->
-    <div class="panel" id="panel-geo">
-      <h1 class="page-title">Geo Location</h1>
-      <p class="page-subtitle">City, weather, and local time overlay. Coming soon.</p>
-    </div>
-
-    <!-- Sub count placeholder -->
-    <div class="panel" id="panel-subcount">
-      <h1 class="page-title">Sub Count</h1>
-      <p class="page-subtitle">Subscriber count with goal tracking. Requires login. Coming soon.</p>
     </div>
   </main>
 
   <script>
     const BASE = location.origin;
 
-    // Navigation
+    // Nav
     document.querySelectorAll('[data-tool]').forEach(el => {
       el.addEventListener('click', () => {
         const tool = el.dataset.tool;
@@ -692,11 +701,11 @@
       });
     });
 
-    // Platform tabs
-    document.querySelectorAll('.platform-tabs').forEach(tabs => {
-      tabs.querySelectorAll('.platform-tab').forEach(tab => {
+    // Tabs
+    document.querySelectorAll('.tabs').forEach(tabs => {
+      tabs.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', () => {
-          tabs.querySelectorAll('.platform-tab').forEach(t => t.classList.remove('active'));
+          tabs.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
           tab.classList.add('active');
           updateUrls();
         });
@@ -724,31 +733,27 @@
     });
 
     // Inputs
-    document.querySelectorAll('.form-input, .form-select').forEach(el => {
+    document.querySelectorAll('.field-input, .field-select').forEach(el => {
       el.addEventListener('input', updateUrls);
       el.addEventListener('change', updateUrls);
     });
 
-    function getActiveTab(tabsId) {
-      const active = document.querySelector(`#${tabsId} .platform-tab.active`);
-      return active ? active.dataset.val : '';
+    function getTab(id) {
+      return document.querySelector(`#${id} .tab.active`)?.dataset.val || '';
     }
 
     function updateUrls() {
       // Timer
-      const timerMode = getActiveTab('timer-mode-tabs');
-      const timerDate = document.getElementById('timer-date')?.value;
-      const timerTime = document.getElementById('timer-time')?.value || '12:00';
-      const timerFont = document.getElementById('timer-font')?.value || 'mono';
-      const timerColor = document.getElementById('timer-color')?.value || '#ffffff';
-      const timerSize = document.getElementById('timer-size')?.value || '4';
-      const timerLabels = document.getElementById('timer-labels')?.classList.contains('on');
-
-      if (timerDate) {
+      const td = document.getElementById('timer-date')?.value;
+      if (td) {
         const params = new URLSearchParams({
-          mode: timerMode, date: timerDate, time: timerTime,
-          font: timerFont, color: timerColor.replace('#',''), size: timerSize,
-          labels: timerLabels ? '1' : '0'
+          mode: getTab('timer-mode-tabs'),
+          date: td,
+          time: document.getElementById('timer-time')?.value || '12:00',
+          font: document.getElementById('timer-font')?.value || 'mono',
+          color: (document.getElementById('timer-color')?.value || '#ffffff').replace('#',''),
+          size: document.getElementById('timer-size')?.value || '4',
+          labels: document.getElementById('timer-labels')?.classList.contains('on') ? '1' : '0'
         });
         const url = `${BASE}/overlays/timer/?${params}`;
         document.getElementById('timer-url').textContent = url;
@@ -756,18 +761,15 @@
       }
 
       // Viewer
-      const viewerPlatform = getActiveTab('viewer-platform-tabs');
-      const viewerChannel = document.getElementById('viewer-channel')?.value?.trim();
-      const viewerFont = document.getElementById('viewer-font')?.value || 'mono';
-      const viewerColor = document.getElementById('viewer-color')?.value || '#ffffff';
-      const viewerSize = document.getElementById('viewer-size')?.value || '4';
-      const viewerIcon = document.getElementById('viewer-icon')?.classList.contains('on');
-
-      if (viewerChannel) {
+      const vc = document.getElementById('viewer-channel')?.value?.trim();
+      if (vc) {
         const params = new URLSearchParams({
-          platform: viewerPlatform, channel: viewerChannel,
-          font: viewerFont, color: viewerColor.replace('#',''), size: viewerSize,
-          icon: viewerIcon ? '1' : '0'
+          platform: getTab('viewer-platform-tabs'),
+          channel: vc,
+          font: document.getElementById('viewer-font')?.value || 'mono',
+          color: (document.getElementById('viewer-color')?.value || '#ffffff').replace('#',''),
+          size: document.getElementById('viewer-size')?.value || '4',
+          icon: document.getElementById('viewer-icon')?.classList.contains('on') ? '1' : '0'
         });
         const url = `${BASE}/overlays/viewer/?${params}`;
         document.getElementById('viewer-url').textContent = url;
@@ -775,54 +777,44 @@
       }
 
       // Follower
-      const followerPlatform = getActiveTab('follower-platform-tabs');
-      const followerChannel = document.getElementById('follower-channel')?.value?.trim();
-      const followerFont = document.getElementById('follower-font')?.value || 'mono';
-      const followerColor = document.getElementById('follower-color')?.value || '#ffffff';
-      const followerGoalOn = document.getElementById('follower-goal-toggle')?.classList.contains('on');
-      const followerGoal = document.getElementById('follower-goal')?.value;
-
-      if (followerChannel) {
+      const fc = document.getElementById('follower-channel')?.value?.trim();
+      if (fc) {
         const params = new URLSearchParams({
-          platform: followerPlatform, channel: followerChannel,
-          font: followerFont, color: followerColor.replace('#','')
+          platform: getTab('follower-platform-tabs'),
+          channel: fc,
+          font: document.getElementById('follower-font')?.value || 'mono',
+          color: (document.getElementById('follower-color')?.value || '#ffffff').replace('#','')
         });
-        if (followerGoalOn && followerGoal) params.set('goal', followerGoal);
-        const url = `${BASE}/overlays/follower/?${params}`;
-        document.getElementById('follower-url').textContent = url;
+        const gOn = document.getElementById('follower-goal-toggle')?.classList.contains('on');
+        const gVal = document.getElementById('follower-goal')?.value;
+        if (gOn && gVal) params.set('goal', gVal);
+        document.getElementById('follower-url').textContent = `${BASE}/overlays/follower/?${params}`;
       }
     }
 
-    // Copy buttons
+    // Copy
     document.querySelectorAll('.btn-copy').forEach(btn => {
       btn.addEventListener('click', () => {
         const urlEl = btn.previousElementSibling;
         const text = urlEl.textContent;
-        if (text.includes('Configure') || text.includes('Enter')) return;
+        if (text.startsWith('Set') || text.startsWith('Enter')) return;
         navigator.clipboard.writeText(text).then(() => {
-          btn.textContent = '✅ Copied!';
+          btn.textContent = 'Copied';
           btn.classList.add('copied');
-          setTimeout(() => {
-            btn.innerHTML = '📋 Copy to OBS';
-            btn.classList.remove('copied');
-          }, 2000);
+          setTimeout(() => { btn.textContent = 'Copy to OBS'; btn.classList.remove('copied'); }, 1500);
         });
       });
     });
 
-    // Init from URL params
+    // Init
     const params = new URLSearchParams(location.search);
-    const initTool = params.get('tool');
-    if (initTool) {
-      document.querySelector(`[data-tool="${initTool}"]`)?.click();
-    }
+    const init = params.get('tool');
+    if (init) document.querySelector(`[data-tool="${init}"]`)?.click();
 
-    // Set default date to tomorrow
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    const dateInput = document.getElementById('timer-date');
-    if (dateInput) dateInput.value = tomorrow.toISOString().split('T')[0];
-
+    const di = document.getElementById('timer-date');
+    if (di) di.value = tomorrow.toISOString().split('T')[0];
     updateUrls();
   </script>
 </body>

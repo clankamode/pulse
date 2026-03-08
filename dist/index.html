@@ -3,597 +3,347 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pulse — Stream Overlays That Don't Break</title>
-  <meta name="description" content="Free stream overlay tools with built-in health monitoring. Viewer counts, timers, chat overlays, and more. Paste a URL into OBS.">
+  <title>Pulse</title>
+  <meta name="description" content="Stream overlay tools. Reliable, minimal, paste-into-OBS.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0a0a0b;
-      --bg-elevated: #111113;
-      --bg-card: #16161a;
-      --border: #222228;
-      --text: #e8e8ed;
-      --text-muted: #7a7a85;
-      --accent: #00ff88;
-      --accent-dim: #00cc6a;
-      --accent-glow: rgba(0, 255, 136, 0.15);
-      --red: #ff4444;
-      --orange: #ff8844;
-      --radius: 12px;
-      --radius-sm: 8px;
+      --bg: #0c0c0d;
+      --surface: #131315;
+      --surface-2: #1a1a1d;
+      --border: #1f1f23;
+      --text: #c8c8cc;
+      --text-secondary: #6b6b73;
+      --text-dim: #44444a;
+      --white: #e4e4e8;
+      --focus: rgba(255,255,255,0.06);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: 'Inter', -apple-system, sans-serif;
+      font-family: 'Inter', -apple-system, system-ui, sans-serif;
       background: var(--bg);
       color: var(--text);
-      line-height: 1.6;
+      line-height: 1.65;
       -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
-    /* Nav */
+    ::selection {
+      background: rgba(255,255,255,0.1);
+    }
+
+    /* --- Navigation: recedes --- */
     nav {
       position: fixed;
       top: 0;
       width: 100%;
       z-index: 100;
-      padding: 16px 32px;
+      padding: 0 32px;
+      height: 52px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: rgba(10, 10, 11, 0.85);
-      backdrop-filter: blur(20px);
+      background: rgba(12, 12, 13, 0.92);
+      backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--border);
     }
 
     .logo {
-      font-weight: 800;
-      font-size: 1.3rem;
-      letter-spacing: -0.02em;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      letter-spacing: -0.01em;
+      color: var(--text-secondary);
       text-decoration: none;
-      color: var(--text);
-    }
-
-    .logo-dot {
-      width: 8px;
-      height: 8px;
-      background: var(--accent);
-      border-radius: 50%;
-      animation: pulse-dot 2s ease-in-out infinite;
-      box-shadow: 0 0 8px var(--accent);
-    }
-
-    @keyframes pulse-dot {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.6; transform: scale(0.85); }
-    }
-
-    .nav-links {
-      display: flex;
-      gap: 32px;
-      align-items: center;
-    }
-
-    .nav-links a {
-      color: var(--text-muted);
-      text-decoration: none;
-      font-size: 0.9rem;
-      font-weight: 500;
       transition: color 0.2s;
     }
 
-    .nav-links a:hover { color: var(--text); }
+    .logo:hover { color: var(--white); }
 
-    .btn {
-      display: inline-flex;
+    .nav-right {
+      display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 10px 20px;
-      border-radius: var(--radius-sm);
-      font-weight: 600;
-      font-size: 0.9rem;
+      gap: 24px;
+    }
+
+    .nav-link {
+      font-size: 0.82rem;
+      color: var(--text-dim);
       text-decoration: none;
-      transition: all 0.2s;
-      border: none;
-      cursor: pointer;
-      font-family: inherit;
+      font-weight: 450;
+      letter-spacing: 0.01em;
+      transition: color 0.2s;
     }
 
-    .btn-primary {
-      background: var(--accent);
-      color: #000;
-    }
+    .nav-link:hover { color: var(--text-secondary); }
 
-    .btn-primary:hover {
-      background: #33ffaa;
-      box-shadow: 0 0 24px var(--accent-glow);
-    }
-
-    .btn-secondary {
-      background: var(--bg-card);
-      color: var(--text);
+    .nav-link-primary {
+      color: var(--text-secondary);
+      padding: 6px 14px;
+      border-radius: 6px;
       border: 1px solid var(--border);
+      transition: all 0.2s;
     }
 
-    .btn-secondary:hover {
-      border-color: var(--text-muted);
+    .nav-link-primary:hover {
+      color: var(--white);
+      border-color: #2a2a30;
+      background: var(--focus);
     }
 
-    /* Hero */
+    /* --- Hero: one source of gravity --- */
     .hero {
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      padding: 80px 24px;
+      max-width: 640px;
+      margin: 0 auto;
       text-align: center;
-      padding: 120px 24px 80px;
-      position: relative;
-      overflow: hidden;
     }
 
-    .hero::before {
-      content: '';
-      position: absolute;
-      top: -200px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 800px;
-      height: 800px;
-      background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
-      pointer-events: none;
+    .hero h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--white);
+      line-height: 1.4;
+      margin-bottom: 16px;
     }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 14px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 100px;
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      margin-bottom: 24px;
-    }
-
-    .badge-dot {
-      width: 6px;
-      height: 6px;
-      background: var(--accent);
-      border-radius: 50%;
-      animation: pulse-dot 2s ease-in-out infinite;
-    }
-
-    h1 {
-      font-size: clamp(2.5rem, 6vw, 4.5rem);
-      font-weight: 900;
-      letter-spacing: -0.03em;
-      line-height: 1.1;
-      margin-bottom: 20px;
-      max-width: 700px;
-    }
-
-    h1 .accent { color: var(--accent); }
 
     .hero p {
-      font-size: 1.15rem;
-      color: var(--text-muted);
-      max-width: 520px;
+      font-size: 0.92rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      max-width: 440px;
       margin-bottom: 36px;
     }
 
-    .hero-actions {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    /* Health bar */
-    .health-demo {
-      margin-top: 64px;
-      padding: 16px 24px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.85rem;
-    }
-
-    .health-indicator {
-      width: 10px;
-      height: 10px;
-      background: var(--accent);
-      border-radius: 50%;
-      animation: pulse-dot 1.5s ease-in-out infinite;
-      box-shadow: 0 0 12px var(--accent);
-    }
-
-    .health-label { color: var(--accent); font-weight: 600; }
-    .health-sep { color: var(--border); }
-    .health-val { color: var(--text-muted); }
-
-    /* Tools grid */
-    .section {
-      padding: 80px 24px;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-
-    .section-label {
-      font-size: 0.8rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--accent);
-      margin-bottom: 8px;
-    }
-
-    .section h2 {
-      font-size: 2.2rem;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      margin-bottom: 12px;
-    }
-
-    .section .subtitle {
-      color: var(--text-muted);
-      font-size: 1.05rem;
-      margin-bottom: 48px;
-      max-width: 560px;
-    }
-
-    .tools-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 16px;
-    }
-
-    .tool-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 28px;
-      transition: all 0.25s;
-      cursor: pointer;
-      text-decoration: none;
-      color: inherit;
-      display: block;
-    }
-
-    .tool-card:hover {
-      border-color: var(--accent);
-      box-shadow: 0 0 32px var(--accent-glow);
-      transform: translateY(-2px);
-    }
-
-    .tool-icon {
-      font-size: 1.8rem;
-      margin-bottom: 14px;
-    }
-
-    .tool-card h3 {
-      font-size: 1.1rem;
-      font-weight: 700;
-      margin-bottom: 6px;
-    }
-
-    .tool-card p {
-      font-size: 0.9rem;
-      color: var(--text-muted);
-      line-height: 1.5;
-    }
-
-    .tool-tag {
+    .hero-action {
       display: inline-block;
-      margin-top: 12px;
-      padding: 3px 10px;
-      background: var(--accent-glow);
-      color: var(--accent);
-      border-radius: 100px;
-      font-size: 0.75rem;
-      font-weight: 600;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text);
+      text-decoration: none;
+      padding: 10px 24px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      transition: all 0.2s;
+      letter-spacing: 0.005em;
     }
 
-    .tool-tag.needs-login {
-      background: rgba(255, 136, 68, 0.15);
-      color: var(--orange);
+    .hero-action:hover {
+      color: var(--white);
+      border-color: #2a2a30;
+      background: var(--focus);
     }
 
-    /* How it works */
-    .steps {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 24px;
-      counter-reset: step;
+    /* --- Tools: calm density --- */
+    .tools {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 0 24px 120px;
     }
 
-    .step {
-      text-align: center;
-      padding: 32px 24px;
-    }
-
-    .step::before {
-      counter-increment: step;
-      content: counter(step);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 40px;
-      height: 40px;
-      background: var(--accent-glow);
-      color: var(--accent);
-      border-radius: 50%;
-      font-weight: 700;
-      font-size: 1rem;
-      margin-bottom: 16px;
-      border: 1px solid rgba(0, 255, 136, 0.3);
-    }
-
-    .step h3 {
-      font-size: 1rem;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-
-    .step p {
-      font-size: 0.9rem;
-      color: var(--text-muted);
-    }
-
-    /* Differentiator */
-    .diff-section {
-      background: var(--bg-elevated);
-      border-top: 1px solid var(--border);
+    .tools-header {
+      font-size: 0.7rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      margin-bottom: 24px;
+      padding-bottom: 12px;
       border-bottom: 1px solid var(--border);
     }
 
-    .diff-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
-    }
-
-    .diff-card {
-      padding: 24px;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-    }
-
-    .diff-card.theirs {
-      background: rgba(255, 68, 68, 0.05);
-      border-color: rgba(255, 68, 68, 0.2);
-    }
-
-    .diff-card.ours {
-      background: var(--accent-glow);
-      border-color: rgba(0, 255, 136, 0.3);
-    }
-
-    .diff-card h3 {
-      font-size: 1rem;
-      font-weight: 700;
-      margin-bottom: 12px;
+    .tool-row {
       display: flex;
-      align-items: center;
-      gap: 8px;
+      align-items: baseline;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+      text-decoration: none;
+      color: inherit;
+      transition: background 0.15s;
+      margin: 0 -12px;
+      padding-left: 12px;
+      padding-right: 12px;
+      border-radius: 6px;
+      border-bottom: none;
     }
 
-    .diff-card ul {
-      list-style: none;
+    .tool-row:hover {
+      background: var(--focus);
+    }
+
+    .tool-row + .tool-row {
+      margin-top: 2px;
+    }
+
+    .tool-name {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: color 0.15s;
+    }
+
+    .tool-row:hover .tool-name {
+      color: var(--white);
+    }
+
+    .tool-desc {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      text-align: right;
+      flex-shrink: 0;
+      margin-left: 24px;
+    }
+
+    /* --- How: structure not ornament --- */
+    .how {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 0 24px 120px;
+    }
+
+    .how-header {
+      font-size: 0.7rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .how-steps {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 0;
     }
 
-    .diff-card li {
-      font-size: 0.9rem;
-      color: var(--text-muted);
-      padding-left: 20px;
-      position: relative;
+    .how-step {
+      display: flex;
+      gap: 20px;
+      padding: 16px 0;
     }
 
-    .diff-card.theirs li::before {
-      content: '✕';
-      position: absolute;
-      left: 0;
-      color: var(--red);
-      font-weight: 700;
+    .how-step + .how-step {
+      border-top: 1px solid var(--border);
     }
 
-    .diff-card.ours li::before {
-      content: '✓';
-      position: absolute;
-      left: 0;
-      color: var(--accent);
-      font-weight: 700;
+    .step-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      padding-top: 2px;
+      flex-shrink: 0;
+      width: 24px;
     }
 
-    /* Footer */
+    .step-text {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* --- Footer: invisible until looked for --- */
     footer {
+      max-width: 640px;
+      margin: 0 auto;
       padding: 40px 24px;
-      text-align: center;
-      color: var(--text-muted);
-      font-size: 0.85rem;
+      font-size: 0.78rem;
+      color: var(--text-dim);
       border-top: 1px solid var(--border);
     }
 
     footer a {
-      color: var(--text-muted);
+      color: var(--text-dim);
       text-decoration: none;
+      transition: color 0.2s;
     }
 
-    footer a:hover { color: var(--text); }
+    footer a:hover { color: var(--text-secondary); }
 
-    /* Responsive */
-    @media (max-width: 768px) {
-      .steps { grid-template-columns: 1fr; }
-      .diff-grid { grid-template-columns: 1fr; }
-      nav { padding: 12px 16px; }
-      .nav-links { gap: 16px; }
-      .section { padding: 60px 16px; }
+    /* --- Responsive --- */
+    @media (max-width: 600px) {
+      nav { padding: 0 16px; }
+      .hero { padding: 80px 20px; }
+      .hero h1 { font-size: 1.3rem; }
+      .tools, .how, footer { padding-left: 20px; padding-right: 20px; }
+      .tool-desc { display: none; }
     }
   </style>
 </head>
 <body>
   <nav>
-    <a href="/" class="logo">
-      <span class="logo-dot"></span>
-      Pulse
-    </a>
-    <div class="nav-links">
-      <a href="/dashboard/">Dashboard</a>
-      <a href="/dashboard/" class="btn btn-primary">Get Started</a>
+    <a href="/" class="logo">Pulse</a>
+    <div class="nav-right">
+      <a href="https://github.com/clankamode/pulse" class="nav-link">Source</a>
+      <a href="/dashboard/" class="nav-link nav-link-primary">Dashboard</a>
     </div>
   </nav>
 
   <section class="hero">
-    <div class="badge">
-      <span class="badge-dot"></span>
-      Free &amp; Open Source
-    </div>
-    <h1>Stream overlays that <span class="accent">don't break.</span></h1>
-    <p>Viewer counts, timers, chat overlays, and more. Every overlay has a heartbeat — you always know it's alive. Paste a URL into OBS.</p>
-    <div class="hero-actions">
-      <a href="/dashboard/" class="btn btn-primary">Open Dashboard</a>
-      <a href="https://github.com/clankamode/pulse" class="btn btn-secondary">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-        GitHub
-      </a>
-    </div>
-    <div class="health-demo">
-      <span class="health-indicator"></span>
-      <span class="health-label">PULSE</span>
-      <span class="health-sep">|</span>
-      <span class="health-val">viewer-count</span>
-      <span class="health-sep">|</span>
-      <span class="health-val">latency 42ms</span>
-      <span class="health-sep">|</span>
-      <span class="health-val" id="uptime">uptime 0:00:00</span>
-    </div>
+    <h1>Stream overlays that stay alive.</h1>
+    <p>Viewer counts, timers, chat overlays. Each one reports its own health. No downloads, no plugins — paste a URL into OBS and it works.</p>
+    <a href="/dashboard/" class="hero-action">Open dashboard</a>
   </section>
 
-  <section class="section">
-    <div class="section-label">Overlay Tools</div>
-    <h2>Everything you need on stream.</h2>
-    <p class="subtitle">Pick a tool, customize the look, copy the URL into OBS. Each overlay includes a heartbeat so you know it's running.</p>
-
-    <div class="tools-grid">
-      <a href="/dashboard/?tool=timer" class="tool-card">
-        <div class="tool-icon">⏱</div>
-        <h3>Timer</h3>
-        <p>Count up or down for subathons, events, and stream milestones. Timezone-aware.</p>
-        <span class="tool-tag">No login</span>
-      </a>
-      <a href="/dashboard/?tool=viewer" class="tool-card">
-        <div class="tool-icon">👁</div>
-        <h3>Viewer Count</h3>
-        <p>Live viewer count for Twitch, YouTube, Kick, or all combined in one overlay.</p>
-        <span class="tool-tag">No login</span>
-      </a>
-      <a href="/dashboard/?tool=follower" class="tool-card">
-        <div class="tool-icon">💚</div>
-        <h3>Follower Count</h3>
-        <p>Real-time follower count with optional goal progress bar.</p>
-        <span class="tool-tag">No login</span>
-      </a>
-      <a href="/dashboard/?tool=chat" class="tool-card">
-        <div class="tool-icon">💬</div>
-        <h3>Chat Box</h3>
-        <p>Chat overlay for Twitch, Kick, and YouTube with emotes and badges.</p>
-        <span class="tool-tag">No login</span>
-      </a>
-      <a href="/dashboard/?tool=geo" class="tool-card">
-        <div class="tool-icon">📍</div>
-        <h3>Geo Location</h3>
-        <p>Show your city, local time, and weather on stream. Customizable.</p>
-        <span class="tool-tag">No login</span>
-      </a>
-      <a href="/dashboard/?tool=subcount" class="tool-card">
-        <div class="tool-icon">⭐</div>
-        <h3>Sub Count</h3>
-        <p>Subscriber count with goal tracking for Twitch and Kick.</p>
-        <span class="tool-tag needs-login">Requires login</span>
-      </a>
-    </div>
+  <section class="tools">
+    <div class="tools-header">Tools</div>
+    <a href="/dashboard/?tool=timer" class="tool-row">
+      <span class="tool-name">Timer</span>
+      <span class="tool-desc">Count up or down. Subathons, events, milestones.</span>
+    </a>
+    <a href="/dashboard/?tool=viewer" class="tool-row">
+      <span class="tool-name">Viewer Count</span>
+      <span class="tool-desc">Twitch, YouTube, Kick, or combined.</span>
+    </a>
+    <a href="/dashboard/?tool=follower" class="tool-row">
+      <span class="tool-name">Follower Count</span>
+      <span class="tool-desc">Real-time count with optional goal bar.</span>
+    </a>
+    <a href="/dashboard/?tool=chat" class="tool-row">
+      <span class="tool-name">Chat Box</span>
+      <span class="tool-desc">Twitch, Kick, YouTube. Emotes and badges.</span>
+    </a>
+    <a href="/dashboard/?tool=geo" class="tool-row">
+      <span class="tool-name">Geo Location</span>
+      <span class="tool-desc">City, weather, local time.</span>
+    </a>
+    <a href="/dashboard/?tool=subcount" class="tool-row">
+      <span class="tool-name">Sub Count</span>
+      <span class="tool-desc">Subscriber count with goal tracking.</span>
+    </a>
   </section>
 
-  <section class="section">
-    <div class="section-label">How It Works</div>
-    <h2>Three steps. That's it.</h2>
-    <p class="subtitle">No downloads, no plugins, no accounts for most tools.</p>
-
-    <div class="steps">
-      <div class="step">
-        <h3>Pick a tool</h3>
-        <p>Choose from timers, counters, chat overlays, and more in the dashboard.</p>
+  <section class="how">
+    <div class="how-header">How it works</div>
+    <div class="how-steps">
+      <div class="how-step">
+        <span class="step-num">01</span>
+        <span class="step-text">Pick a tool and enter your channel name.</span>
       </div>
-      <div class="step">
-        <h3>Customize &amp; copy</h3>
-        <p>Set your channel, colors, fonts. Hit "Copy to OBS" to get your unique URL.</p>
+      <div class="how-step">
+        <span class="step-num">02</span>
+        <span class="step-text">Adjust font, color, and size. Preview updates live.</span>
       </div>
-      <div class="step">
-        <h3>Paste into OBS</h3>
-        <p>Add a Browser Source in OBS, paste the URL. It's live — with a heartbeat.</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="section diff-section">
-    <div style="max-width: 1100px; margin: 0 auto;">
-      <div class="section-label">Why Pulse</div>
-      <h2>Overlays shouldn't be a gamble.</h2>
-      <p class="subtitle">Every other tool hopes it's working. Pulse knows.</p>
-
-      <div class="diff-grid">
-        <div class="diff-card theirs">
-          <h3>🔴 Other tools</h3>
-          <ul>
-            <li>Overlay goes blank — you find out from chat</li>
-            <li>"Clear cache and refresh" as the fix for everything</li>
-            <li>No way to tell if the overlay is actually alive</li>
-            <li>Debug by guessing and restarting OBS</li>
-          </ul>
-        </div>
-        <div class="diff-card ours">
-          <h3>🟢 Pulse</h3>
-          <ul>
-            <li>Every overlay emits a heartbeat — you see it's alive</li>
-            <li>Built-in latency and health monitoring</li>
-            <li>Fallback mode when APIs hiccup — shows last-known data</li>
-            <li>Lightweight: pure HTML/CSS/JS, no heavy frameworks</li>
-          </ul>
-        </div>
+      <div class="how-step">
+        <span class="step-num">03</span>
+        <span class="step-text">Copy the URL. Add it as a Browser Source in OBS. It's running.</span>
       </div>
     </div>
   </section>
 
   <footer>
-    <p>Built by <a href="https://clanka.dev">Clanka</a> ⚡ · <a href="https://github.com/clankamode/pulse">Source</a></p>
+    <span>Built by <a href="https://clanka.dev">Clanka</a></span>
   </footer>
-
-  <script>
-    // Uptime ticker
-    const start = Date.now();
-    const el = document.getElementById('uptime');
-    setInterval(() => {
-      const s = Math.floor((Date.now() - start) / 1000);
-      const h = String(Math.floor(s / 3600));
-      const m = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
-      const sec = String(s % 60).padStart(2, '0');
-      el.textContent = `uptime ${h}:${m}:${sec}`;
-    }, 1000);
-  </script>
 </body>
 </html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pulse Combined Stats</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&family=JetBrains+Mono:wght@500;700&family=Russo+One&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      overflow: hidden;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-start;
+    }
+
+    .overlay {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 0.5em;
+      color: #ffffff;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+      letter-spacing: -0.03em;
+      white-space: nowrap;
+      padding: 0.08em 0.14em;
+    }
+
+    .overlay.vertical {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.16em;
+      white-space: normal;
+    }
+
+    .metric {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 0.28em;
+      min-width: 0;
+    }
+
+    .metric-icon {
+      opacity: 0.62;
+      font-size: 0.62em;
+      line-height: 1;
+      flex: 0 0 auto;
+      transform: translateY(-0.02em);
+    }
+
+    .metric-value {
+      font-weight: 700;
+      letter-spacing: -0.045em;
+    }
+
+    .divider {
+      opacity: 0.34;
+      font-size: 0.72em;
+      line-height: 1;
+      transform: translateY(-0.04em);
+    }
+
+    .hb {
+      position: fixed;
+      bottom: 4px;
+      right: 4px;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      animation: hb 4s ease-in-out infinite;
+    }
+
+    @keyframes hb {
+      0%, 100% { opacity: 0.15; }
+      50% { opacity: 0.05; }
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay" id="overlay" aria-live="polite"></div>
+  <div class="hb" title="Pulse overlay active"></div>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+
+    const fonts = {
+      mono: "'JetBrains Mono', monospace",
+      inter: "'Inter', sans-serif",
+      russo: "'Russo One', sans-serif"
+    };
+
+    function parseHex(input, fallback) {
+      const normalized = (input || '').replace(/[^0-9a-f]/gi, '').slice(0, 6);
+      return normalized || fallback;
+    }
+
+    function parsePositiveNumber(input, fallback) {
+      const parsed = Number(input);
+      return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+    }
+
+    function parseBooleanFlag(input, fallback) {
+      if (input === '0') return false;
+      if (input === '1') return true;
+      return fallback;
+    }
+
+    function parseLayout(input) {
+      return input === 'vertical' ? 'vertical' : 'horizontal';
+    }
+
+    function hashString(value) {
+      let hash = 2166136261;
+      for (let index = 0; index < value.length; index += 1) {
+        hash ^= value.charCodeAt(index);
+        hash = Math.imul(hash, 16777619);
+      }
+      return hash >>> 0;
+    }
+
+    function createGenerator(seed) {
+      let state = seed || 1;
+      return function nextRandom() {
+        state = (state * 1664525 + 1013904223) >>> 0;
+        return state / 4294967296;
+      };
+    }
+
+    function formatCount(value) {
+      return Math.max(0, Math.round(value)).toLocaleString();
+    }
+
+    function formatCompact(value) {
+      const abs = Math.abs(value);
+      const options = { maximumFractionDigits: abs >= 1000000 ? 1 : 1 };
+      if (abs >= 1000000) {
+        return `${(value / 1000000).toLocaleString('en-US', options)}M`;
+      }
+      if (abs >= 1000) {
+        return `${(value / 1000).toLocaleString('en-US', options)}K`;
+      }
+      return formatCount(value);
+    }
+
+    function formatUptime(totalSeconds) {
+      const safeSeconds = Math.max(0, Math.floor(totalSeconds));
+      const hours = Math.floor(safeSeconds / 3600);
+      const minutes = Math.floor((safeSeconds % 3600) / 60);
+      const seconds = safeSeconds % 60;
+      return [
+        String(hours).padStart(2, '0'),
+        String(minutes).padStart(2, '0'),
+        String(seconds).padStart(2, '0')
+      ].join(':');
+    }
+
+    const config = {
+      channel: (params.get('channel') || '').trim(),
+      platform: params.get('platform') === 'kick' ? 'kick' : 'twitch',
+      font: fonts[params.get('font')] ? params.get('font') : 'mono',
+      color: `#${parseHex(params.get('color'), 'ffffff')}`,
+      sizeRem: parsePositiveNumber(params.get('size'), 1.2),
+      layout: parseLayout(params.get('layout')),
+      showViewers: parseBooleanFlag(params.get('show_viewers'), true),
+      showFollowers: parseBooleanFlag(params.get('show_followers'), true),
+      showUptime: parseBooleanFlag(params.get('show_uptime'), true),
+      showFps: parseBooleanFlag(params.get('show_fps'), false),
+      divider: params.get('divider') || '·'
+    };
+
+    const overlayEl = document.getElementById('overlay');
+    overlayEl.style.fontFamily = fonts[config.font];
+    overlayEl.style.fontSize = `${config.sizeRem}rem`;
+    overlayEl.style.color = config.color;
+    overlayEl.classList.toggle('vertical', config.layout === 'vertical');
+
+    const seed = hashString(`${config.channel}:${config.platform}:combined`);
+    const nextRandom = createGenerator(seed);
+    const startedAt = Date.now();
+
+    const state = {
+      viewers: Math.floor(150 + nextRandom() * 4800),
+      followers: Math.floor(1200 + nextRandom() * 890000)
+    };
+
+    function bumpValue(current, minimum, maximum, range, floorAt) {
+      const drift = Math.round((nextRandom() - 0.5) * range);
+      const stepped = current + drift;
+      return Math.max(floorAt, Math.min(maximum, Math.max(minimum, stepped)));
+    }
+
+    function refreshDemoMetrics() {
+      const viewerRange = config.platform === 'kick' ? 180 : 260;
+      const followerRange = config.platform === 'kick' ? 3200 : 4500;
+      state.viewers = bumpValue(state.viewers, 20, 999999, viewerRange, 20);
+      state.followers = bumpValue(state.followers, 100, 9999999, followerRange, 100);
+      render();
+    }
+
+    function buildMetric(icon, value) {
+      return `<span class="metric"><span class="metric-icon" aria-hidden="true">${icon}</span><span class="metric-value">${value}</span></span>`;
+    }
+
+    function render() {
+      const metrics = [];
+
+      if (config.showViewers) {
+        metrics.push(buildMetric('👁', formatCount(state.viewers)));
+      }
+
+      if (config.showFollowers) {
+        metrics.push(buildMetric('💚', formatCompact(state.followers)));
+      }
+
+      if (config.showUptime) {
+        const uptimeSeconds = Math.floor((Date.now() - startedAt) / 1000);
+        metrics.push(buildMetric('⏱', formatUptime(uptimeSeconds)));
+      }
+
+      if (config.showFps) {
+        metrics.push(buildMetric('◆', '60'));
+      }
+
+      if (metrics.length === 0) {
+        metrics.push(buildMetric('◆', 'Pulse'));
+      }
+
+      if (config.layout === 'vertical') {
+        overlayEl.innerHTML = metrics.join('');
+        return;
+      }
+
+      const divider = `<span class="divider" aria-hidden="true">${config.divider}</span>`;
+      overlayEl.innerHTML = metrics.join(divider);
+    }
+
+    render();
+    setInterval(render, 1000);
+    setInterval(refreshDemoMetrics, 30000);
+  </script>
+</body>
+</html>

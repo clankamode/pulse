@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pulse — Overlay Health</title>
+  <meta name="description" content="Pulse overlay health dashboard for active stream scenes.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0c0c0d;
+      --surface: #131315;
+      --surface-2: #17171a;
+      --surface-3: #1d1d21;
+      --border: #1f1f23;
+      --border-strong: #2a2a30;
+      --text: #c8c8cc;
+      --text-secondary: #87878f;
+      --text-dim: #5a5a61;
+      --white: #e4e4e8;
+      --healthy: #657760;
+      --healthy-bright: #879b81;
+      --degraded: #8d7558;
+      --degraded-bright: #b6986f;
+      --dead: #895b5b;
+      --dead-bright: #b27d7d;
+      --focus: rgba(255, 255, 255, 0.05);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    ::selection {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 52px;
+      padding: 0 24px;
+      background: rgba(12, 12, 13, 0.94);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(16px);
+    }
+
+    .nav-logo,
+    .nav-link {
+      text-decoration: none;
+      font-size: 0.82rem;
+      letter-spacing: 0.01em;
+    }
+
+    .nav-logo {
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .nav-link {
+      color: var(--text-dim);
+      font-weight: 450;
+      transition: color 0.18s ease;
+    }
+
+    .nav-link:hover,
+    .nav-logo:hover {
+      color: var(--white);
+    }
+
+    .nav-link-current {
+      color: var(--text-secondary);
+    }
+
+    .page {
+      width: 100%;
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 56px 24px 96px;
+    }
+
+    .eyebrow {
+      font-size: 0.68rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+      margin-bottom: 12px;
+    }
+
+    .hero {
+      margin-bottom: 40px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) minmax(260px, 0.9fr);
+      gap: 28px;
+      align-items: end;
+      padding-bottom: 28px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .hero-title {
+      font-size: clamp(1.5rem, 1.1rem + 1.2vw, 2rem);
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      color: var(--white);
+      line-height: 1.16;
+      margin-bottom: 12px;
+    }
+
+    .hero-copy {
+      max-width: 520px;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .status-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+    }
+
+    .status-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      margin-bottom: 10px;
+    }
+
+    .status-title {
+      font-size: 1rem;
+      font-weight: 550;
+      color: var(--white);
+      letter-spacing: -0.015em;
+      margin-bottom: 14px;
+    }
+
+    .status-meta {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+    }
+
+    .metric-label {
+      display: block;
+      font-size: 0.66rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      margin-bottom: 4px;
+    }
+
+    .metric-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .section {
+      margin-bottom: 36px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: 0.72rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+    }
+
+    .section-caption {
+      font-size: 0.76rem;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .overlay-head,
+    .overlay-row {
+      display: grid;
+      grid-template-columns: minmax(0, 2.6fr) 0.95fr 1fr 0.9fr 0.9fr;
+      gap: 16px;
+      align-items: center;
+      padding: 14px 18px;
+    }
+
+    .overlay-head {
+      background: var(--surface-2);
+      border-bottom: 1px solid var(--border);
+      font-size: 0.66rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+    }
+
+    .overlay-row + .overlay-row {
+      border-top: 1px solid var(--border);
+    }
+
+    .overlay-row {
+      transition: background 0.18s ease;
+    }
+
+    .overlay-row:hover {
+      background: var(--focus);
+    }
+
+    .overlay-name {
+      min-width: 0;
+    }
+
+    .overlay-title {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--white);
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .overlay-context {
+      font-size: 0.76rem;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      min-width: 0;
+    }
+
+    .status-value {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: var(--text-dim);
+    }
+
+    .status-pill.healthy .status-dot {
+      background: var(--healthy-bright);
+    }
+
+    .status-pill.degraded .status-dot {
+      background: var(--degraded-bright);
+    }
+
+    .status-pill.dead .status-dot {
+      background: var(--dead-bright);
+    }
+
+    .status-pill::before {
+      content: attr(data-label);
+      display: none;
+      margin-right: 12px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.62rem;
+      font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    }
+
+    .metric-cell {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.77rem;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .metric-cell::before {
+      content: attr(data-label);
+      display: none;
+      margin-right: 12px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.62rem;
+      font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    }
+
+    .log-list {
+      list-style: none;
+    }
+
+    .log-row {
+      display: grid;
+      grid-template-columns: 112px minmax(0, 1fr);
+      gap: 16px;
+      padding: 14px 18px;
+      font-size: 0.82rem;
+    }
+
+    .log-row + .log-row {
+      border-top: 1px solid var(--border);
+    }
+
+    .log-time {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+
+    .log-message {
+      color: var(--text-secondary);
+    }
+
+    .how {
+      max-width: 720px;
+      padding-top: 4px;
+      border-top: 1px solid var(--border);
+    }
+
+    .how p {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      margin-top: 14px;
+      max-width: 62ch;
+    }
+
+    @media (max-width: 760px) {
+      .nav {
+        padding: 0 18px;
+      }
+
+      .page {
+        padding: 40px 16px 72px;
+      }
+
+      .hero-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .status-card {
+        padding: 16px;
+      }
+
+      .status-meta {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .overlay-head {
+        display: none;
+      }
+
+      .overlay-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px 18px;
+      }
+
+      .overlay-name {
+        grid-column: 1 / -1;
+      }
+
+      .metric-cell::before {
+        display: inline-block;
+      }
+
+      .status-pill::before {
+        display: inline-block;
+      }
+
+      .status-pill,
+      .metric-cell {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .log-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav" aria-label="Primary">
+    <a class="nav-logo" href="../">Pulse</a>
+    <div class="nav-links">
+      <a class="nav-link" href="../dashboard/">Dashboard</a>
+      <span class="nav-link nav-link-current">Health</span>
+    </div>
+  </nav>
+
+  <main class="page">
+    <header class="hero">
+      <div class="eyebrow">Overlay Health</div>
+      <div class="hero-grid">
+        <div>
+          <h1 class="hero-title">Control-room visibility for every active Pulse overlay.</h1>
+          <p class="hero-copy">Monitor scene-level heartbeat flow, transport latency, and overlay availability from one centered surface. The page simulates live health activity for demo purposes.</p>
+        </div>
+        <section class="status-card" aria-live="polite">
+          <div class="status-label">Overall Status</div>
+          <div id="overall-status" class="status-title">All systems operational</div>
+          <div class="status-meta">
+            <div>
+              <span class="metric-label">Active Overlays</span>
+              <span id="active-count" class="metric-value">0</span>
+            </div>
+            <div>
+              <span class="metric-label">Healthy</span>
+              <span id="healthy-count" class="metric-value">0</span>
+            </div>
+            <div>
+              <span class="metric-label">Avg Latency</span>
+              <span id="avg-latency" class="metric-value">0ms</span>
+            </div>
+          </div>
+        </section>
+      </div>
+    </header>
+
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">Active Overlays</h2>
+        <div id="last-scan" class="section-caption">Last scan 00:00:00</div>
+      </div>
+      <div class="panel">
+        <div class="overlay-head" aria-hidden="true">
+          <div>Overlay</div>
+          <div>Status</div>
+          <div>Last Heartbeat</div>
+          <div>Latency</div>
+          <div>Uptime</div>
+        </div>
+        <div id="overlay-list"></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">Event Log</h2>
+        <div class="section-caption">Reverse chronological</div>
+      </div>
+      <div class="panel">
+        <ul id="event-log" class="log-list"></ul>
+      </div>
+    </section>
+
+    <section class="how">
+      <h2 class="section-title">How It Works</h2>
+      <p>Each Pulse overlay emits a recurring heartbeat with timing and latency metadata. This page watches that stream, highlights missed heartbeats, and records recovery events so operators can verify scene health before viewers ever notice drift.</p>
+    </section>
+  </main>
+
+  <script>
+    const overlays = [
+      {
+        id: 'viewer-xqc',
+        tool: 'Viewer Count',
+        owner: 'xqc',
+        scene: 'Intro Left Rail',
+        status: 'healthy',
+        lastHeartbeatAt: Date.now() - 2000,
+        latency: 42,
+        uptimeStartedAt: Date.now() - ((2 * 60 * 60 + 14 * 60) * 1000),
+        heartbeatEveryMs: 4000,
+        nextHeartbeatAt: Date.now() + 1800,
+        incidentStartedAt: null
+      },
+      {
+        id: 'subtrain-mizkif',
+        tool: 'Sub Train',
+        owner: 'mizkif',
+        scene: 'Full Cam Lower Third',
+        status: 'healthy',
+        lastHeartbeatAt: Date.now() - 5000,
+        latency: 71,
+        uptimeStartedAt: Date.now() - ((5 * 60 * 60 + 8 * 60) * 1000),
+        heartbeatEveryMs: 6000,
+        nextHeartbeatAt: Date.now() + 2200,
+        incidentStartedAt: null
+      },
+      {
+        id: 'chat-ludwig',
+        tool: 'Chat Feed',
+        owner: 'ludwig',
+        scene: 'BRB Right Column',
+        status: 'healthy',
+        lastHeartbeatAt: Date.now() - 1100,
+        latency: 58,
+        uptimeStartedAt: Date.now() - ((1 * 60 * 60 + 27 * 60) * 1000),
+        heartbeatEveryMs: 3000,
+        nextHeartbeatAt: Date.now() + 1400,
+        incidentStartedAt: null
+      },
+      {
+        id: 'goal-hasan',
+        tool: 'Sub Goal',
+        owner: 'hasanabi',
+        scene: 'Main Cam Banner',
+        status: 'healthy',
+        lastHeartbeatAt: Date.now() - 8000,
+        latency: 95,
+        uptimeStartedAt: Date.now() - ((46 * 60) * 1000),
+        heartbeatEveryMs: 7000,
+        nextHeartbeatAt: Date.now() + 2600,
+        incidentStartedAt: null
+      },
+      {
+        id: 'clock-valkyrae',
+        tool: 'Stream Timer',
+        owner: 'valkyrae',
+        scene: 'Countdown Stack',
+        status: 'healthy',
+        lastHeartbeatAt: Date.now() - 3000,
+        latency: 37,
+        uptimeStartedAt: Date.now() - ((8 * 60 * 60 + 3 * 60) * 1000),
+        heartbeatEveryMs: 5000,
+        nextHeartbeatAt: Date.now() + 3100,
+        incidentStartedAt: null
+      }
+    ];
+
+    const events = [
+      { timestamp: new Date(Date.now() - 74 * 1000), message: 'Viewer Count reconnected (was degraded for 12s)' },
+      { timestamp: new Date(Date.now() - 86 * 1000), message: 'Viewer Count heartbeat missed' },
+      { timestamp: new Date(Date.now() - 3 * 60 * 1000), message: 'All overlays healthy' }
+    ];
+
+    const overlayList = document.getElementById('overlay-list');
+    const eventLog = document.getElementById('event-log');
+    const overallStatus = document.getElementById('overall-status');
+    const activeCount = document.getElementById('active-count');
+    const healthyCount = document.getElementById('healthy-count');
+    const avgLatency = document.getElementById('avg-latency');
+    const lastScan = document.getElementById('last-scan');
+
+    function formatClock(date) {
+      return date.toLocaleTimeString([], {
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    }
+
+    function pluralize(value, word) {
+      return value === 1 ? word : word + 's';
+    }
+
+    function formatRelative(seconds) {
+      return seconds + 's ago';
+    }
+
+    function formatUptime(ms) {
+      const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+      const days = Math.floor(totalSeconds / 86400);
+      const hours = Math.floor((totalSeconds % 86400) / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+
+      if (days > 0) {
+        return days + 'd ' + hours + 'h';
+      }
+      if (hours > 0) {
+        return hours + 'h ' + minutes + 'm';
+      }
+      if (minutes > 0) {
+        return minutes + 'm ' + seconds + 's';
+      }
+      return seconds + 's';
+    }
+
+    function pushEvent(message, time = new Date()) {
+      events.unshift({ timestamp: time, message });
+      events.splice(14);
+      renderEvents();
+    }
+
+    function humanStatus(status) {
+      if (status === 'healthy') return 'Healthy';
+      if (status === 'degraded') return 'Degraded';
+      return 'Offline';
+    }
+
+    function renderSummary(now) {
+      const healthy = overlays.filter((overlay) => overlay.status === 'healthy').length;
+      const degraded = overlays.filter((overlay) => overlay.status === 'degraded').length;
+      const dead = overlays.filter((overlay) => overlay.status === 'dead').length;
+      const latencyValue = Math.round(
+        overlays.reduce((sum, overlay) => sum + overlay.latency, 0) / overlays.length
+      );
+
+      let summary = 'All systems operational';
+      if (dead > 0) {
+        summary = dead + ' ' + pluralize(dead, 'overlay') + ' offline';
+      } else if (degraded > 0) {
+        summary = degraded + ' ' + pluralize(degraded, 'overlay') + ' degraded';
+      }
+
+      overallStatus.textContent = summary;
+      activeCount.textContent = String(overlays.length);
+      healthyCount.textContent = String(healthy);
+      avgLatency.textContent = latencyValue + 'ms';
+      lastScan.textContent = 'Last scan ' + formatClock(new Date(now));
+    }
+
+    function renderOverlays(now) {
+      overlayList.innerHTML = overlays.map((overlay) => {
+        const heartbeatAge = Math.max(0, Math.floor((now - overlay.lastHeartbeatAt) / 1000));
+        return `
+          <div class="overlay-row">
+            <div class="overlay-name">
+              <div class="overlay-title">${overlay.tool} &mdash; ${overlay.owner}</div>
+              <div class="overlay-context">${overlay.scene}</div>
+            </div>
+            <div class="status-pill ${overlay.status}" data-label="Status">
+              <span class="status-value">
+                <span class="status-dot" aria-hidden="true"></span>
+                <span>${humanStatus(overlay.status)}</span>
+              </span>
+            </div>
+            <div class="metric-cell" data-label="Heartbeat">${formatRelative(heartbeatAge)}</div>
+            <div class="metric-cell" data-label="Latency">${overlay.latency}ms</div>
+            <div class="metric-cell" data-label="Uptime">${formatUptime(now - overlay.uptimeStartedAt)}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderEvents() {
+      eventLog.innerHTML = events.map((event) => `
+        <li class="log-row">
+          <div class="log-time">${formatClock(event.timestamp)}</div>
+          <div class="log-message">${event.message}</div>
+        </li>
+      `).join('');
+    }
+
+    function rerollLatency(overlay, floor, ceiling) {
+      overlay.latency = Math.max(floor, Math.min(ceiling, Math.round(overlay.latency + (Math.random() * 22 - 11))));
+    }
+
+    function updateHealthyOverlay(overlay, now) {
+      if (now < overlay.nextHeartbeatAt) {
+        return;
+      }
+
+      overlay.lastHeartbeatAt = now;
+      rerollLatency(overlay, 28, 120);
+      overlay.nextHeartbeatAt = now + overlay.heartbeatEveryMs + Math.floor((Math.random() * 1600) - 800);
+    }
+
+    function recoverOverlay(overlay, now) {
+      const incidentDuration = Math.max(1, Math.floor((now - overlay.incidentStartedAt) / 1000));
+      const previousStatus = overlay.status;
+      overlay.status = 'healthy';
+      overlay.lastHeartbeatAt = now;
+      overlay.nextHeartbeatAt = now + overlay.heartbeatEveryMs;
+      overlay.uptimeStartedAt = now;
+      overlay.incidentStartedAt = null;
+      rerollLatency(overlay, 32, 110);
+      if (previousStatus === 'dead') {
+        pushEvent(overlay.tool + ' restored after ' + incidentDuration + 's offline');
+      } else {
+        pushEvent(overlay.tool + ' reconnected (was degraded for ' + incidentDuration + 's)');
+      }
+
+      if (overlays.every((item) => item.status === 'healthy')) {
+        pushEvent('All overlays healthy');
+      }
+    }
+
+    function markDead(overlay) {
+      overlay.status = 'dead';
+      overlay.latency = Math.min(overlay.latency + 120, 999);
+      pushEvent(overlay.tool + ' connection lost');
+    }
+
+    function beginIncident() {
+      const candidates = overlays.filter((overlay) => overlay.status === 'healthy');
+      if (!candidates.length) {
+        return;
+      }
+
+      const overlay = candidates[Math.floor(Math.random() * candidates.length)];
+      const now = Date.now();
+
+      overlay.status = 'degraded';
+      overlay.incidentStartedAt = now;
+      overlay.latency = Math.min(overlay.latency + 90, 420);
+      pushEvent(overlay.tool + ' heartbeat missed');
+
+      const escalationDelay = 8000 + Math.floor(Math.random() * 12000);
+      window.setTimeout(() => {
+        if (overlay.status !== 'degraded') {
+          return;
+        }
+
+        if (Math.random() < 0.28) {
+          markDead(overlay);
+          const recoveryDelay = 12000 + Math.floor(Math.random() * 12000);
+          window.setTimeout(() => {
+            if (overlay.status === 'dead') {
+              recoverOverlay(overlay, Date.now());
+            }
+          }, recoveryDelay);
+          return;
+        }
+
+        recoverOverlay(overlay, Date.now());
+      }, escalationDelay);
+    }
+
+    function scheduleIncident() {
+      const delay = 30000 + Math.floor(Math.random() * 30000);
+      window.setTimeout(() => {
+        beginIncident();
+        scheduleIncident();
+      }, delay);
+    }
+
+    function tick() {
+      const now = Date.now();
+
+      overlays.forEach((overlay) => {
+        if (overlay.status === 'healthy') {
+          updateHealthyOverlay(overlay, now);
+        }
+      });
+
+      renderSummary(now);
+      renderOverlays(now);
+    }
+
+    renderEvents();
+    tick();
+    window.setInterval(tick, 1000);
+    scheduleIncident();
+  </script>
+</body>
+</html>

@@ -449,6 +449,12 @@
       <button class="sidebar-item" data-tool="chat">Chat Box</button>
       <button class="sidebar-item" data-tool="geo">Geo Location</button>
       <button class="sidebar-item" data-tool="subcount">Sub Count</button>
+      <button class="sidebar-item" data-tool="alerts">Alerts</button>
+      <button class="sidebar-item" data-tool="combined">Combined Stats</button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Diagnostics</div>
+      <a class="sidebar-item" href="/health/" style="text-decoration:none;">Health Monitor</a>
     </div>
   </aside>
 
@@ -483,6 +489,14 @@
           <div class="home-row" data-tool="subcount">
             <span class="home-name">Sub Count</span>
             <span class="home-desc">With goal tracking</span>
+          </div>
+          <div class="home-row" data-tool="alerts">
+            <span class="home-name">Alerts</span>
+            <span class="home-desc">Follow, sub, raid, gift</span>
+          </div>
+          <div class="home-row" data-tool="combined">
+            <span class="home-name">Combined Stats</span>
+            <span class="home-desc">All metrics in one overlay</span>
           </div>
         </div>
       </div>
@@ -882,6 +896,153 @@
         </div>
       </div>
 
+      <!-- Alerts -->
+      <div class="panel" id="panel-alerts">
+        <h1 class="page-title">Alerts</h1>
+        <p class="page-subtitle">Follow, sub, raid, and gift sub notifications.</p>
+
+        <div class="field">
+          <label class="field-label">Platform</label>
+          <div class="tabs" id="alerts-platform-tabs">
+            <button class="tab active" data-val="twitch">Twitch</button>
+            <button class="tab" data-val="kick">Kick</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Channel</label>
+          <input type="text" class="field-input" id="alerts-channel" placeholder="channel name">
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Font</label>
+            <select class="field-select" id="alerts-font">
+              <option value="mono">Monospace</option>
+              <option value="inter">Inter</option>
+              <option value="russo">Russo One</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Text Color</label>
+            <input type="color" class="field-input" id="alerts-color" value="#e4e4e8" style="height:38px;padding:3px 6px;">
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Accent Color</label>
+            <input type="color" class="field-input" id="alerts-accent" value="#ffffff" style="height:38px;padding:3px 6px;">
+          </div>
+          <div class="field">
+            <label class="field-label">Duration (sec)</label>
+            <input type="number" class="field-input" id="alerts-duration" value="5" min="2" max="15">
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Animation Style</label>
+          <div class="tabs" id="alerts-style-tabs">
+            <button class="tab active" data-val="fade">Fade</button>
+            <button class="tab" data-val="slide">Slide</button>
+            <button class="tab" data-val="minimal">Minimal</button>
+          </div>
+        </div>
+
+        <div class="output">
+          <div class="output-label">OBS Browser Source URL</div>
+          <div class="output-url" id="alerts-url">Enter a channel name</div>
+          <button class="btn-copy" id="alerts-copy">Copy to OBS</button>
+        </div>
+
+        <div class="preview">
+          <div class="preview-header">
+            <span class="preview-label">Preview (demo alerts)</span>
+          </div>
+          <div class="preview-frame" style="height:200px;">
+            <iframe id="alerts-preview" style="height:200px;"></iframe>
+          </div>
+        </div>
+      </div>
+
+      <!-- Combined Stats -->
+      <div class="panel" id="panel-combined">
+        <h1 class="page-title">Combined Stats</h1>
+        <p class="page-subtitle">All metrics in one overlay — one browser source.</p>
+
+        <div class="field">
+          <label class="field-label">Platform</label>
+          <div class="tabs" id="combined-platform-tabs">
+            <button class="tab active" data-val="twitch">Twitch</button>
+            <button class="tab" data-val="kick">Kick</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Channel</label>
+          <input type="text" class="field-input" id="combined-channel" placeholder="channel name">
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Font</label>
+            <select class="field-select" id="combined-font">
+              <option value="mono">Monospace</option>
+              <option value="inter">Inter</option>
+              <option value="russo">Russo One</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Color</label>
+            <input type="color" class="field-input" id="combined-color" value="#e4e4e8" style="height:38px;padding:3px 6px;">
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Size</label>
+          <div class="slider-row">
+            <input type="range" min="0.8" max="3" step="0.1" value="1.2" id="combined-size">
+            <span class="slider-val" id="combined-size-val">1.2rem</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Layout</label>
+          <div class="tabs" id="combined-layout-tabs">
+            <button class="tab active" data-val="horizontal">Horizontal</button>
+            <button class="tab" data-val="vertical">Vertical</button>
+          </div>
+        </div>
+
+        <div class="toggle-row">
+          <span class="toggle-text">Viewers</span>
+          <div class="toggle on" id="combined-viewers"></div>
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-text">Followers</span>
+          <div class="toggle on" id="combined-followers"></div>
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-text">Uptime</span>
+          <div class="toggle on" id="combined-uptime"></div>
+        </div>
+
+        <div class="output">
+          <div class="output-label">OBS Browser Source URL</div>
+          <div class="output-url" id="combined-url">Enter a channel name</div>
+          <button class="btn-copy" id="combined-copy">Copy to OBS</button>
+        </div>
+
+        <div class="preview">
+          <div class="preview-header">
+            <span class="preview-label">Preview</span>
+          </div>
+          <div class="preview-frame">
+            <iframe id="combined-preview"></iframe>
+          </div>
+        </div>
+      </div>
+
     </div>
   </main>
 
@@ -1046,6 +1207,42 @@
         const url = `${BASE}/overlays/subcount/?${params}`;
         document.getElementById('sub-url').textContent = url;
         document.getElementById('sub-preview').src = url;
+      }
+
+      // Alerts
+      const ac = document.getElementById('alerts-channel')?.value?.trim();
+      if (ac) {
+        const params = new URLSearchParams({
+          platform: getTab('alerts-platform-tabs'),
+          channel: ac,
+          font: document.getElementById('alerts-font')?.value || 'mono',
+          color: (document.getElementById('alerts-color')?.value || '#e4e4e8').replace('#',''),
+          alert_color: (document.getElementById('alerts-accent')?.value || '#ffffff').replace('#',''),
+          duration: document.getElementById('alerts-duration')?.value || '5',
+          style: getTab('alerts-style-tabs')
+        });
+        const url = `${BASE}/overlays/alerts/?${params}`;
+        document.getElementById('alerts-url').textContent = url;
+        document.getElementById('alerts-preview').src = url;
+      }
+
+      // Combined
+      const cbc = document.getElementById('combined-channel')?.value?.trim();
+      if (cbc) {
+        const params = new URLSearchParams({
+          platform: getTab('combined-platform-tabs'),
+          channel: cbc,
+          font: document.getElementById('combined-font')?.value || 'mono',
+          color: (document.getElementById('combined-color')?.value || '#e4e4e8').replace('#',''),
+          size: document.getElementById('combined-size')?.value || '1.2',
+          layout: getTab('combined-layout-tabs'),
+          show_viewers: document.getElementById('combined-viewers')?.classList.contains('on') ? '1' : '0',
+          show_followers: document.getElementById('combined-followers')?.classList.contains('on') ? '1' : '0',
+          show_uptime: document.getElementById('combined-uptime')?.classList.contains('on') ? '1' : '0'
+        });
+        const url = `${BASE}/overlays/combined/?${params}`;
+        document.getElementById('combined-url').textContent = url;
+        document.getElementById('combined-preview').src = url;
       }
     }
 

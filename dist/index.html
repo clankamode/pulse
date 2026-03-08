@@ -5,176 +5,87 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pulse</title>
   <meta name="description" content="Stream overlay tools. Reliable, minimal, paste-into-OBS.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/shared.css">
   <style>
     :root {
-      --bg: #0c0c0d;
-      --surface: #131315;
       --surface-2: #1a1a1d;
-      --border: #1f1f23;
-      --text: #c8c8cc;
-      --text-secondary: #6b6b73;
       --text-dim: #44444a;
-      --white: #e4e4e8;
-      --focus: rgba(255,255,255,0.06);
+      --focus: rgba(255, 255, 255, 0.06);
     }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      font-family: 'Inter', -apple-system, system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.65;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
+    .landing-main {
+      padding-bottom: 1rem;
     }
 
-    ::selection {
-      background: rgba(255,255,255,0.1);
-    }
-
-    /* --- Navigation: recedes --- */
-    nav {
-      position: fixed;
-      top: 0;
-      width: 100%;
-      z-index: 100;
-      padding: 0 32px;
-      height: 52px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: rgba(12, 12, 13, 0.92);
-      backdrop-filter: blur(16px);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .logo {
-      font-weight: 600;
-      font-size: 0.95rem;
-      letter-spacing: -0.01em;
-      color: var(--text-secondary);
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-
-    .logo:hover { color: var(--white); }
-
-    .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 24px;
-    }
-
-    .nav-link {
-      font-size: 0.82rem;
-      color: var(--text-dim);
-      text-decoration: none;
-      font-weight: 450;
-      letter-spacing: 0.01em;
-      transition: color 0.2s;
-    }
-
-    .nav-link:hover { color: var(--text-secondary); }
-
-    .nav-link-primary {
-      color: var(--text-secondary);
-      padding: 6px 14px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      transition: all 0.2s;
-    }
-
-    .nav-link-primary:hover {
-      color: var(--white);
-      border-color: #2a2a30;
-      background: var(--focus);
-    }
-
-    /* --- Hero: one source of gravity --- */
     .hero {
-      min-height: 100vh;
+      min-height: calc(100vh - 78px);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 80px 24px;
-      max-width: 640px;
+      width: min(100%, 680px);
       margin: 0 auto;
+      padding: 4rem 2rem 5rem;
       text-align: center;
     }
 
     .hero h1 {
-      font-size: 1.5rem;
-      font-weight: 600;
-      letter-spacing: -0.02em;
-      color: var(--white);
-      line-height: 1.4;
-      margin-bottom: 16px;
+      margin-bottom: 1rem;
+      font-size: clamp(1.5rem, 1.1rem + 1.2vw, 2rem);
+      letter-spacing: -0.03em;
+      line-height: 1.16;
     }
 
     .hero p {
-      font-size: 0.92rem;
+      max-width: 34rem;
+      margin-bottom: 2.25rem;
       color: var(--text-secondary);
-      line-height: 1.7;
-      max-width: 440px;
-      margin-bottom: 36px;
+      font-size: 0.92rem;
     }
 
     .hero-action {
       display: inline-block;
-      font-size: 0.85rem;
-      font-weight: 500;
-      color: var(--text);
-      text-decoration: none;
-      padding: 10px 24px;
+      padding: 0.7rem 1.4rem;
       border: 1px solid var(--border);
       border-radius: 8px;
-      transition: all 0.2s;
-      letter-spacing: 0.005em;
+      color: var(--text-primary);
+      font-size: 0.82rem;
+      font-weight: 500;
+      letter-spacing: 0.01em;
     }
 
     .hero-action:hover {
-      color: var(--white);
-      border-color: #2a2a30;
+      color: var(--accent);
       background: var(--focus);
+      border-color: #2a2a30;
     }
 
-    /* --- Tools: calm density --- */
-    .tools {
-      max-width: 640px;
+    .landing-section {
+      width: min(100%, 680px);
       margin: 0 auto;
-      padding: 0 24px 120px;
+      padding: 0 2rem 5.5rem;
     }
 
-    .tools-header {
-      font-size: 0.7rem;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--text-dim);
-      margin-bottom: 24px;
-      padding-bottom: 12px;
+    .section-header {
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
       border-bottom: 1px solid var(--border);
+      color: var(--text-dim);
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
     }
 
     .tool-row {
       display: flex;
       align-items: baseline;
       justify-content: space-between;
-      padding: 14px 0;
-      border-bottom: 1px solid var(--border);
-      text-decoration: none;
+      gap: 1.25rem;
+      margin: 0 -0.75rem;
+      padding: 0.9rem 0.75rem;
+      border-radius: 8px;
       color: inherit;
-      transition: background 0.15s;
-      margin: 0 -12px;
-      padding-left: 12px;
-      padding-right: 12px;
-      border-radius: 6px;
-      border-bottom: none;
     }
 
     .tool-row:hover {
@@ -182,56 +93,35 @@
     }
 
     .tool-row + .tool-row {
-      margin-top: 2px;
+      margin-top: 0.1rem;
     }
 
     .tool-name {
+      color: var(--text-primary);
       font-size: 0.9rem;
       font-weight: 500;
-      color: var(--text);
-      transition: color 0.15s;
     }
 
     .tool-row:hover .tool-name {
-      color: var(--white);
+      color: var(--accent);
     }
 
     .tool-desc {
-      font-size: 0.8rem;
-      color: var(--text-dim);
-      text-align: right;
       flex-shrink: 0;
-      margin-left: 24px;
-    }
-
-    /* --- How: structure not ornament --- */
-    .how {
-      max-width: 640px;
-      margin: 0 auto;
-      padding: 0 24px 120px;
-    }
-
-    .how-header {
-      font-size: 0.7rem;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
       color: var(--text-dim);
-      margin-bottom: 24px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--border);
+      font-size: 0.8rem;
+      text-align: right;
     }
 
     .how-steps {
       display: flex;
       flex-direction: column;
-      gap: 0;
     }
 
     .how-step {
       display: flex;
-      gap: 20px;
-      padding: 16px 0;
+      gap: 1.25rem;
+      padding: 1rem 0;
     }
 
     .how-step + .how-step {
@@ -239,129 +129,125 @@
     }
 
     .step-num {
+      width: 24px;
+      flex-shrink: 0;
+      padding-top: 0.1rem;
+      color: var(--text-dim);
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.75rem;
-      color: var(--text-dim);
-      padding-top: 2px;
-      flex-shrink: 0;
-      width: 24px;
     }
 
     .step-text {
-      font-size: 0.88rem;
       color: var(--text-secondary);
-      line-height: 1.6;
+      font-size: 0.88rem;
     }
 
-    /* --- Footer: invisible until looked for --- */
-    footer {
-      max-width: 640px;
-      margin: 0 auto;
-      padding: 40px 24px;
-      font-size: 0.78rem;
-      color: var(--text-dim);
-      border-top: 1px solid var(--border);
-    }
+    @media (max-width: 720px) {
+      .hero,
+      .landing-section {
+        padding-left: 1.25rem;
+        padding-right: 1.25rem;
+      }
 
-    footer a {
-      color: var(--text-dim);
-      text-decoration: none;
-      transition: color 0.2s;
-    }
+      .hero {
+        min-height: auto;
+        padding-top: 4.5rem;
+      }
 
-    footer a:hover { color: var(--text-secondary); }
-
-    /* --- Responsive --- */
-    @media (max-width: 600px) {
-      nav { padding: 0 16px; }
-      .hero { padding: 80px 20px; }
-      .hero h1 { font-size: 1.3rem; }
-      .tools, .how, footer { padding-left: 20px; padding-right: 20px; }
-      .tool-desc { display: none; }
+      .tool-desc {
+        display: none;
+      }
     }
   </style>
 </head>
 <body>
-  <nav>
-    <a href="/" class="logo">Pulse</a>
-    <div class="nav-right">
-      <a href="https://github.com/clankamode/pulse" class="nav-link">Source</a>
-      <a href="/dashboard/" class="nav-link nav-link-primary">Dashboard</a>
+  <nav class="site-nav" aria-label="Primary">
+    <a href="/" class="site-brand">Pulse</a>
+    <div class="site-nav-links">
+      <a href="/dashboard/" class="site-nav-link">Dashboard</a>
+      <a href="/health/" class="site-nav-link">Health</a>
+      <a href="/privacy/" class="site-nav-link">Privacy</a>
+      <a href="/terms/" class="site-nav-link">Terms</a>
+      <a href="https://github.com/clankamode/pulse" class="site-nav-link" rel="noopener noreferrer">GitHub</a>
     </div>
   </nav>
 
-  <section class="hero">
-    <h1>Stream overlays that stay alive.</h1>
-    <p>Viewer counts, timers, chat overlays. Each one reports its own health. No downloads, no plugins — paste a URL into OBS and it works.</p>
-    <a href="/dashboard/" class="hero-action">Open dashboard</a>
-  </section>
+  <main class="landing-main">
+    <section class="hero">
+      <h1>Stream overlays that stay alive.</h1>
+      <p>Viewer counts, timers, chat overlays. Each one reports its own health. No downloads, no plugins. Paste a URL into OBS and it works.</p>
+      <a href="/dashboard/" class="hero-action">Open dashboard</a>
+    </section>
 
-  <section class="tools">
-    <div class="tools-header">Tools</div>
-    <a href="/dashboard/?tool=timer" class="tool-row">
-      <span class="tool-name">Timer</span>
-      <span class="tool-desc">Count up or down. Subathons, events, milestones.</span>
-    </a>
-    <a href="/dashboard/?tool=viewer" class="tool-row">
-      <span class="tool-name">Viewer Count</span>
-      <span class="tool-desc">Twitch, YouTube, Kick, or combined.</span>
-    </a>
-    <a href="/dashboard/?tool=follower" class="tool-row">
-      <span class="tool-name">Follower Count</span>
-      <span class="tool-desc">Real-time count with optional goal bar.</span>
-    </a>
-    <a href="/dashboard/?tool=chat" class="tool-row">
-      <span class="tool-name">Chat Box</span>
-      <span class="tool-desc">Twitch, Kick, YouTube. Emotes and badges.</span>
-    </a>
-    <a href="/dashboard/?tool=geo" class="tool-row">
-      <span class="tool-name">Geo Location</span>
-      <span class="tool-desc">City, weather, local time.</span>
-    </a>
-    <a href="/dashboard/?tool=subcount" class="tool-row">
-      <span class="tool-name">Sub Count</span>
-      <span class="tool-desc">Subscriber count with goal tracking.</span>
-    </a>
-    <a href="/dashboard/?tool=alerts" class="tool-row">
-      <span class="tool-name">Alerts</span>
-      <span class="tool-desc">Follow, sub, raid, gift notifications.</span>
-    </a>
-    <a href="/dashboard/?tool=combined" class="tool-row">
-      <span class="tool-name">Combined Stats</span>
-      <span class="tool-desc">All your metrics in one overlay.</span>
-    </a>
-    <a href="/health/" class="tool-row">
-      <span class="tool-name">Health Monitor</span>
-      <span class="tool-desc">Overlay diagnostics and uptime.</span>
-    </a>
-  </section>
+    <section class="landing-section">
+      <div class="section-header">Tools</div>
+      <a href="/dashboard/?tool=timer" class="tool-row">
+        <span class="tool-name">Timer</span>
+        <span class="tool-desc">Count up or down. Subathons, events, milestones.</span>
+      </a>
+      <a href="/dashboard/?tool=viewer" class="tool-row">
+        <span class="tool-name">Viewer Count</span>
+        <span class="tool-desc">Twitch, YouTube, Kick, or combined.</span>
+      </a>
+      <a href="/dashboard/?tool=follower" class="tool-row">
+        <span class="tool-name">Follower Count</span>
+        <span class="tool-desc">Real-time count with optional goal bar.</span>
+      </a>
+      <a href="/dashboard/?tool=chat" class="tool-row">
+        <span class="tool-name">Chat Box</span>
+        <span class="tool-desc">Twitch, Kick, YouTube. Emotes and badges.</span>
+      </a>
+      <a href="/dashboard/?tool=geo" class="tool-row">
+        <span class="tool-name">Geo Location</span>
+        <span class="tool-desc">City, weather, local time.</span>
+      </a>
+      <a href="/dashboard/?tool=subcount" class="tool-row">
+        <span class="tool-name">Sub Count</span>
+        <span class="tool-desc">Subscriber count with goal tracking.</span>
+      </a>
+      <a href="/dashboard/?tool=alerts" class="tool-row">
+        <span class="tool-name">Alerts</span>
+        <span class="tool-desc">Follow, sub, raid, gift notifications.</span>
+      </a>
+      <a href="/dashboard/?tool=combined" class="tool-row">
+        <span class="tool-name">Combined Stats</span>
+        <span class="tool-desc">All your metrics in one overlay.</span>
+      </a>
+      <a href="/health/" class="tool-row">
+        <span class="tool-name">Health Monitor</span>
+        <span class="tool-desc">Overlay diagnostics and uptime.</span>
+      </a>
+    </section>
 
-  <section class="how">
-    <div class="how-header">How it works</div>
-    <div class="how-steps">
-      <div class="how-step">
-        <span class="step-num">01</span>
-        <span class="step-text">Pick a tool and enter your channel name.</span>
+    <section class="landing-section">
+      <div class="section-header">How It Works</div>
+      <div class="how-steps">
+        <div class="how-step">
+          <span class="step-num">01</span>
+          <span class="step-text">Pick a tool and enter your channel name.</span>
+        </div>
+        <div class="how-step">
+          <span class="step-num">02</span>
+          <span class="step-text">Adjust font, color, and size. Preview updates live.</span>
+        </div>
+        <div class="how-step">
+          <span class="step-num">03</span>
+          <span class="step-text">Copy the URL. Add it as a Browser Source in OBS. It's running.</span>
+        </div>
       </div>
-      <div class="how-step">
-        <span class="step-num">02</span>
-        <span class="step-text">Adjust font, color, and size. Preview updates live.</span>
-      </div>
-      <div class="how-step">
-        <span class="step-num">03</span>
-        <span class="step-text">Copy the URL. Add it as a Browser Source in OBS. It's running.</span>
-      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <span>Built by Clanka</span>
+      <span>·</span>
+      <a href="/privacy/">Privacy</a>
+      <span>·</span>
+      <a href="/terms/">Terms</a>
+      <span>·</span>
+      <a href="https://github.com/clankamode/pulse" rel="noopener noreferrer">GitHub</a>
     </div>
-  </section>
-
-  <footer>
-    <span>Built by <a href="https://clanka.dev">Clanka</a></span>
-    <span style="margin:0 0.5rem;">·</span>
-    <a href="/privacy/">Privacy</a>
-    <span style="margin:0 0.5rem;">·</span>
-    <a href="/terms/">Terms</a>
-    <span style="margin:0 0.5rem;">·</span>
-    <a href="https://github.com/clankamode/pulse">GitHub</a>
   </footer>
 </body>
 </html>

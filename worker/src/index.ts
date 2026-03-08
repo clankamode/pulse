@@ -2,6 +2,7 @@ interface Env {
   ENVIRONMENT: string;
   TWITCH_CLIENT_ID?: string;
   TWITCH_CLIENT_SECRET?: string;
+  YOUTUBE_API_KEY?: string;
 }
 
 interface WorkerExecutionContext {
@@ -46,6 +47,23 @@ type KickChannelResponse = {
   livestream?: {
     viewer_count?: number;
   } | null;
+};
+
+type YouTubeSearchResponse = {
+  items?: Array<{ id?: { videoId?: string } }>;
+};
+
+type YouTubeVideoResponse = {
+  items?: Array<{
+    liveStreamingDetails?: { concurrentViewers?: string };
+  }>;
+};
+
+type YouTubeChannelResponse = {
+  items?: Array<{
+    id?: string;
+    statistics?: { subscriberCount?: string };
+  }>;
 };
 
 const CACHE_TTL_SECONDS = 60;
@@ -152,13 +170,29 @@ async function getRoutePayload(
   }
 
   if (route === "viewers" && platform === "youtube") {
-    return {
-      count: 0,
-      cached: false,
-      channel,
-      error: "youtube_not_implemented",
-      platform,
-    };
+    if (!env.YOUTUBE_API_KEY) {
+      return {
+        count: randomDemoCount(),
+        cached: false,
+        channel,
+        demo: true,
+        platform,
+      };
+    }
+    return getYouTubeViewers(channel, env);
+  }
+
+  if (route === "followers" && platform === "youtube") {
+    if (!env.YOUTUBE_API_KEY) {
+      return {
+        count: randomDemoCount(),
+        cached: false,
+        channel,
+        demo: true,
+        platform,
+      };
+    }
+    return getYouTubeSubscribers(channel, env);
   }
 
   if (platform === "twitch") {
@@ -321,6 +355,97 @@ async function getTwitchFollowers(channel: string, env: Env): Promise<ApiPayload
     channel,
     platform: "twitch",
   };
+}
+
+async function getYouTubeViewers(channel: string, env: Env): Promise<ApiPayload> {
+  const key = env.YOUTUBE_API_KEY ?? "";
+
+  // First resolve channel name → channel ID
+  const channelId = await resolveYouTubeChannelId(channel, key);
+  if (!channelId.ok) {
+    return { count: 0, cached: false, channel, error: channelId.error, platform: "youtube" };
+  }
+
+  // Search for active live stream on the channel
+  const searchResult = await fetchJson<YouTubeSearchResponse>(
+    `https://www.googleapis.com/youtube/v3/search?part=id&channelId=${encodeURIComponent(channelId.data)}&type=video&eventType=live&key=${encodeURIComponent(key)}`,
+  );
+
+  if (!searchResult.ok) {
+    return { count: 0, cached: false, channel, error: searchResult.error, platform: "youtube" };
+  }
+
+  const videoId = searchResult.data.items?.[0]?.id?.videoId;
+  if (!videoId) {
+    return { count: 0, cached: false, channel, error: "not_live", platform: "youtube" };
+  }
+
+  // Get concurrent viewers from liveStreamingDetails
+  const videoResult = await fetchJson<YouTubeVideoResponse>(
+    `https://www.googleapis.com/youtube/v3/videos?part=liveStreamingDetails&id=${encodeURIComponent(videoId)}&key=${encodeURIComponent(key)}`,
+  );
+
+  if (!videoResult.ok) {
+    return { count: 0, cached: false, channel, error: videoResult.error, platform: "youtube" };
+  }
+
+  const viewers = parseInt(
+    videoResult.data.items?.[0]?.liveStreamingDetails?.concurrentViewers ?? "0",
+    10,
+  );
+
+  return { count: viewers, cached: false, channel, platform: "youtube" };
+}
+
+async function getYouTubeSubscribers(channel: string, env: Env): Promise<ApiPayload> {
+  const key = env.YOUTUBE_API_KEY ?? "";
+
+  const channelId = await resolveYouTubeChannelId(channel, key);
+  if (!channelId.ok) {
+    return { count: 0, cached: false, channel, error: channelId.error, platform: "youtube" };
+  }
+
+  const statsResult = await fetchJson<YouTubeChannelResponse>(
+    `https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${encodeURIComponent(channelId.data)}&key=${encodeURIComponent(key)}`,
+  );
+
+  if (!statsResult.ok) {
+    return { count: 0, cached: false, channel, error: statsResult.error, platform: "youtube" };
+  }
+
+  const subs = parseInt(
+    statsResult.data.items?.[0]?.statistics?.subscriberCount ?? "0",
+    10,
+  );
+
+  return { count: subs, cached: false, channel, platform: "youtube" };
+}
+
+async function resolveYouTubeChannelId(channel: string, key: string): Promise<JsonResult<string>> {
+  // Try as handle first (@username), then as channel name
+  const handleResult = await fetchJson<YouTubeChannelResponse>(
+    `https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=${encodeURIComponent(channel)}&key=${encodeURIComponent(key)}`,
+  );
+
+  if (handleResult.ok && handleResult.data.items?.[0]?.id) {
+    return { ok: true, data: handleResult.data.items[0].id };
+  }
+
+  // Fallback: try forUsername
+  const userResult = await fetchJson<YouTubeChannelResponse>(
+    `https://www.googleapis.com/youtube/v3/channels?part=id&forUsername=${encodeURIComponent(channel)}&key=${encodeURIComponent(key)}`,
+  );
+
+  if (userResult.ok && userResult.data.items?.[0]?.id) {
+    return { ok: true, data: userResult.data.items[0].id };
+  }
+
+  // If the input looks like a channel ID already (starts with UC), use it directly
+  if (channel.startsWith("UC") && channel.length === 24) {
+    return { ok: true, data: channel };
+  }
+
+  return { ok: false, error: "youtube_channel_not_found" };
 }
 
 async function getKickChannel(channel: string): Promise<JsonResult<KickChannelResponse>> {

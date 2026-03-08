@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pulse Chat Box</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=JetBrains+Mono:wght@700&family=Russo+One&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --message-color: #ffffff;
+      --message-size: 1.4rem;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: transparent;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      min-height: 100vh;
+    }
+
+    .chat-shell {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-start;
+      padding: 18px;
+      overflow: hidden;
+    }
+
+    .chat-feed {
+      width: min(38rem, calc(100vw - 36px));
+      height: calc(100vh - 36px);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: flex-start;
+      overflow: hidden;
+    }
+
+    .chat-message {
+      width: 100%;
+      max-width: 100%;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.65em;
+      margin-top: 0.5rem;
+      padding: 0.7em 0.9em;
+      background: rgba(17, 17, 17, 0.78);
+      color: var(--message-color);
+      font-family: 'Inter', sans-serif;
+      font-size: var(--message-size);
+      line-height: 1.35;
+      overflow: hidden;
+      opacity: 1;
+      transform: translateY(0);
+      transform-origin: bottom left;
+      max-height: 10rem;
+      --opacity-duration: 200ms;
+      transition:
+        transform 200ms ease,
+        opacity var(--opacity-duration) ease,
+        max-height 200ms ease,
+        margin 200ms ease,
+        padding 200ms ease;
+    }
+
+    .chat-message:first-child {
+      margin-top: 0;
+    }
+
+    .chat-message.is-entering {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+
+    .chat-message.is-faded {
+      --opacity-duration: 2000ms;
+      opacity: 0.3;
+    }
+
+    .chat-message.is-removing {
+      opacity: 0;
+      transform: translateY(-12px);
+      margin-top: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      max-height: 0;
+    }
+
+    .badges {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35em;
+      flex-shrink: 0;
+      padding-top: 0.18em;
+    }
+
+    .badge {
+      width: 0.7em;
+      height: 0.7em;
+      background: rgba(255, 255, 255, 0.6);
+      flex-shrink: 0;
+    }
+
+    .badge.subscriber {
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.42);
+    }
+
+    .badge.mod {
+      clip-path: polygon(50% 0%, 100% 20%, 84% 100%, 16% 100%, 0% 20%);
+      background: rgba(255, 255, 255, 0.82);
+    }
+
+    .content {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .username {
+      font-weight: 700;
+      margin-right: 0.45em;
+      white-space: nowrap;
+    }
+
+    .message-text {
+      font-family: 'Inter', sans-serif;
+      font-weight: 400;
+      color: var(--message-color);
+      word-break: break-word;
+    }
+
+    .hb {
+      position: fixed;
+      bottom: 4px;
+      right: 4px;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      animation: hb 4s ease-in-out infinite;
+    }
+
+    @keyframes hb {
+      0%, 100% { opacity: 0.15; }
+      50% { opacity: 0.05; }
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-shell">
+    <div class="chat-feed" id="chat-feed" aria-live="polite" aria-label="Live chat overlay"></div>
+  </div>
+  <div class="hb" title="Pulse overlay active"></div>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+
+    const fonts = {
+      mono: "'JetBrains Mono', monospace",
+      inter: "'Inter', sans-serif",
+      russo: "'Russo One', sans-serif"
+    };
+
+    function clamp(value, min, max) {
+      return Math.min(Math.max(value, min), max);
+    }
+
+    function parseNumber(value, fallback) {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : fallback;
+    }
+
+    function normalizeColor(value) {
+      const fallback = 'ffffff';
+      if (!value) return '#' + fallback;
+      const cleaned = value.trim().replace(/^#/, '');
+      if (/^[0-9a-fA-F]{3}$/.test(cleaned) || /^[0-9a-fA-F]{6}$/.test(cleaned)) {
+        return '#' + cleaned;
+      }
+      return '#' + fallback;
+    }
+
+    const config = {
+      platform: ['twitch', 'kick', 'youtube'].includes(params.get('platform')) ? params.get('platform') : 'twitch',
+      channel: params.get('channel') || '',
+      font: fonts[params.get('font')] ? params.get('font') : 'inter',
+      color: normalizeColor(params.get('color')),
+      size: clamp(parseNumber(params.get('size'), 1.4), 0.8, 3.2),
+      max: clamp(Math.floor(parseNumber(params.get('max'), 8)), 1, 20),
+      fade: params.get('fade') !== '0'
+    };
+
+    const demoUsers = [
+      'aetherfox', 'MinaPlays', 'chatdad', 'velvetpixel', 'RuneArcade', 'catnaps',
+      'hollowtape', 'LemonOrbit', 'nightlotus', 'devsnack', 'KairoTV', 'mint_fizz',
+      'apricotbyte', 'NovaRelay', 'quietclutch', 'altoframe', 'sleeplesscam', 'lucidlock'
+    ];
+
+    const demoMessages = [
+      'that timing was unreal',
+      'clean transition',
+      'chat is locked in',
+      'obs looks sharp tonight',
+      'this overlay feels expensive',
+      'huge play incoming',
+      'mods are awake',
+      'audio is perfect now',
+      'that deserves a replay',
+      'queue me for next round',
+      'we are so back',
+      'camera cut was smooth',
+      'late but made it',
+      'this pace is wild',
+      'can we run that again',
+      'save the clip',
+      'prediction window closes soon',
+      'yep that was the move'
+    ];
+
+    const demoSuffixes = [
+      'gg', 'lmao', 'lets go', 'clean', 'actual cinema', 'huge', 'no notes', 'im crying', 'locked',
+      'chat heard that', 'clip it', 'real one', 'same', 'facts'
+    ];
+
+    const feed = document.getElementById('chat-feed');
+    const cleanup = [];
+    let demoTimer = null;
+
+    document.body.dataset.platform = config.platform;
+    document.documentElement.style.setProperty('--message-color', config.color);
+    document.documentElement.style.setProperty('--message-size', config.size + 'rem');
+
+    function hashString(input) {
+      let hash = 0;
+      for (let i = 0; i < input.length; i += 1) {
+        hash = (hash << 5) - hash + input.charCodeAt(i);
+        hash |= 0;
+      }
+      return Math.abs(hash);
+    }
+
+    function usernameColor(username) {
+      const hash = hashString(username);
+      const hue = hash % 360;
+      const saturation = 48 + (hash % 18);
+      const lightness = 62 + (hash % 10);
+      return 'hsl(' + hue + ' ' + saturation + '% ' + lightness + '%)';
+    }
+
+    function removeMessage(node) {
+      if (!node || node.classList.contains('is-removing')) {
+        return;
+      }
+      node.classList.add('is-removing');
+      window.setTimeout(() => {
+        if (node.parentNode) {
+          node.parentNode.removeChild(node);
+        }
+      }, 220);
+    }
+
+    function pruneMessages() {
+      const overflow = feed.children.length - config.max;
+      for (let index = 0; index < overflow; index += 1) {
+        const oldest = feed.querySelector('.chat-message:not(.is-removing)');
+        if (!oldest) {
+          break;
+        }
+        removeMessage(oldest);
+      }
+    }
+
+    function scheduleFade(node) {
+      if (!config.fade) {
+        return;
+      }
+      const fadeTimer = window.setTimeout(() => {
+        node.classList.add('is-faded');
+      }, 10000);
+      cleanup.push(() => window.clearTimeout(fadeTimer));
+    }
+
+    function buildBadges(badges) {
+      const wrapper = document.createElement('span');
+      wrapper.className = 'badges';
+
+      badges.forEach((badge) => {
+        const dot = document.createElement('span');
+        dot.className = 'badge ' + badge;
+        dot.title = badge === 'mod' ? 'Moderator' : 'Subscriber';
+        wrapper.appendChild(dot);
+      });
+
+      return wrapper;
+    }
+
+    function addMessage(username, message, badges) {
+      const node = document.createElement('article');
+      node.className = 'chat-message is-entering';
+
+      const badgeList = Array.isArray(badges) ? badges.filter(Boolean) : [];
+      if (badgeList.length) {
+        node.appendChild(buildBadges(badgeList));
+      }
+
+      const content = document.createElement('div');
+      content.className = 'content';
+
+      const usernameEl = document.createElement('span');
+      usernameEl.className = 'username';
+      usernameEl.style.fontFamily = fonts[config.font];
+      usernameEl.style.color = usernameColor(username);
+      usernameEl.textContent = username;
+
+      const messageEl = document.createElement('span');
+      messageEl.className = 'message-text';
+      messageEl.textContent = message;
+
+      content.appendChild(usernameEl);
+      content.appendChild(messageEl);
+      node.appendChild(content);
+      feed.appendChild(node);
+
+      window.requestAnimationFrame(() => {
+        node.classList.remove('is-entering');
+      });
+
+      pruneMessages();
+      scheduleFade(node);
+    }
+
+    function pick(array) {
+      return array[Math.floor(Math.random() * array.length)];
+    }
+
+    function pickBadges() {
+      const badges = [];
+      if (Math.random() < 0.38) {
+        badges.push('subscriber');
+      }
+      if (Math.random() < 0.16) {
+        badges.push('mod');
+      }
+      return badges;
+    }
+
+    function buildDemoMessage() {
+      const username = pick(demoUsers);
+      const base = pick(demoMessages);
+      const maybeSuffix = Math.random() < 0.45 ? ' ' + pick(demoSuffixes) : '';
+      const maybeChannel = config.channel && Math.random() < 0.22 ? ' ' + config.channel : '';
+      return {
+        username,
+        message: base + maybeSuffix + maybeChannel,
+        badges: pickBadges()
+      };
+    }
+
+    function scheduleDemoTick() {
+      const delay = 2000 + Math.floor(Math.random() * 3000);
+      demoTimer = window.setTimeout(() => {
+        const next = buildDemoMessage();
+        addMessage(next.username, next.message, next.badges);
+        scheduleDemoTick();
+      }, delay);
+    }
+
+    function startDemoMode() {
+      scheduleDemoTick();
+      return function stopDemoMode() {
+        if (demoTimer) {
+          window.clearTimeout(demoTimer);
+          demoTimer = null;
+        }
+      };
+    }
+
+    function createConnector() {
+      return {
+        start() {
+          return startDemoMode();
+        },
+        push(payload) {
+          addMessage(payload.username, payload.message, payload.badges || []);
+        }
+      };
+    }
+
+    const connector = createConnector();
+    const stop = connector.start();
+    cleanup.push(() => {
+      if (typeof stop === 'function') {
+        stop();
+      }
+    });
+
+    window.PulseChatOverlay = {
+      addMessage,
+      connector,
+      config
+    };
+
+    window.addEventListener('beforeunload', () => {
+      cleanup.forEach((fn) => fn());
+    });
+  </script>
+</body>
+</html>

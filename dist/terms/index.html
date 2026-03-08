@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terms of Service — Pulse</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0a0b; color: #a0a0a8; font-family: 'Inter', -apple-system, sans-serif; line-height: 1.7; }
+    .nav { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 2rem; border-bottom: 1px solid #222228; }
+    .nav-logo { color: #e4e4e8; font-size: 0.95rem; font-weight: 600; text-decoration: none; letter-spacing: 0.02em; }
+    .nav-links a { color: #666; font-size: 0.8rem; text-decoration: none; margin-left: 1.5rem; letter-spacing: 0.04em; text-transform: uppercase; }
+    .nav-links a:hover { color: #e4e4e8; }
+    .container { max-width: 680px; margin: 0 auto; padding: 4rem 2rem 6rem; }
+    .label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.12em; color: #555; margin-bottom: 1rem; }
+    h1 { font-size: 1.8rem; color: #e4e4e8; font-weight: 600; margin-bottom: 0.5rem; line-height: 1.3; }
+    .updated { font-size: 0.8rem; color: #555; margin-bottom: 3rem; }
+    h2 { font-size: 1rem; color: #e4e4e8; font-weight: 600; margin-top: 2.5rem; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+    p { margin-bottom: 1rem; font-size: 0.92rem; }
+    ul { margin: 0 0 1rem 1.5rem; font-size: 0.92rem; }
+    li { margin-bottom: 0.4rem; }
+    a { color: #e4e4e8; }
+    .footer { text-align: center; padding: 2rem; border-top: 1px solid #222228; font-size: 0.75rem; color: #444; }
+    .footer a { color: #555; text-decoration: none; margin: 0 0.75rem; }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <a href="/" class="nav-logo">Pulse</a>
+    <div class="nav-links">
+      <a href="/dashboard/">Dashboard</a>
+      <a href="/terms/">Terms</a>
+      <a href="/privacy/">Privacy</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="label">Legal</div>
+    <h1>Terms of Service</h1>
+    <p class="updated">Last updated: March 7, 2026</p>
+
+    <h2>The short version</h2>
+    <p>Pulse is a free, open-source tool. Use it however you want for your streams. Don't abuse the infrastructure, and don't blame us if something breaks mid-stream.</p>
+
+    <h2>The service</h2>
+    <p>Pulse provides streaming overlay tools delivered as static web pages and an API proxy hosted on Cloudflare. The service is provided free of charge with no guarantee of uptime, availability, or fitness for any particular purpose.</p>
+
+    <h2>Acceptable use</h2>
+    <p>You may use Pulse for any lawful purpose, including commercial streaming. You agree not to:</p>
+    <ul>
+      <li>Abuse, overload, or interfere with the API proxy or hosting infrastructure</li>
+      <li>Use the service to circumvent platform terms of service (e.g., Twitch Simulcast Guidelines)</li>
+      <li>Reverse-engineer API keys or credentials embedded in the Worker</li>
+      <li>Misrepresent Pulse as your own product without attribution</li>
+    </ul>
+
+    <h2>Platform compliance</h2>
+    <p>You are responsible for ensuring your use of Pulse overlays complies with the terms of service of your streaming platform (Twitch, YouTube, Kick, etc.). This includes but is not limited to simulcasting rules, chat display policies, and data usage restrictions.</p>
+
+    <h2>No warranty</h2>
+    <p>Pulse is provided "as is" without warranty of any kind, express or implied. We do not guarantee that overlays will load, display correctly, or maintain connectivity during your stream. API data depends on third-party services (Twitch, YouTube, Kick, wttr.in) that we do not control.</p>
+
+    <h2>Limitation of liability</h2>
+    <p>To the maximum extent permitted by law, Pulse and its contributors shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including but not limited to loss of revenue, data, or stream quality, arising from your use of the service.</p>
+
+    <h2>Open source</h2>
+    <p>Pulse is released under the <a href="https://github.com/clankamode/pulse/blob/main/LICENSE">MIT License</a>. You are free to fork, modify, and self-host. The MIT License terms apply to the source code. These Terms of Service apply to your use of the hosted service at pulse-stream-668.pages.dev.</p>
+
+    <h2>Rate limits</h2>
+    <p>The API proxy operates within Cloudflare Workers free tier limits and third-party API quotas. Excessive automated requests may be rate-limited or blocked without notice. If you need higher throughput, self-host your own instance.</p>
+
+    <h2>Changes</h2>
+    <p>We may update these terms. Continued use of the service after changes constitutes acceptance. For a free open-source tool with no accounts, we'll keep this simple.</p>
+
+    <h2>Contact</h2>
+    <p>Questions or concerns? Open an issue on <a href="https://github.com/clankamode/pulse">GitHub</a>.</p>
+  </div>
+
+  <div class="footer">
+    <a href="/">Home</a>
+    <a href="/terms/">Terms</a>
+    <a href="/privacy/">Privacy</a>
+    <a href="https://github.com/clankamode/pulse">GitHub</a>
+  </div>
+</body>
+</html>

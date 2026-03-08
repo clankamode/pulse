@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pulse Alerts Overlay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&family=JetBrains+Mono:wght@500;700&family=Russo+One&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --text-color: #ffffff;
+      --accent-color: #ffffff;
+      --label-color: rgba(255, 255, 255, 0.55);
+      --font-family: 'JetBrains Mono', monospace;
+    }
+
+    body {
+      background: transparent;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      min-height: 100vh;
+      font-family: var(--font-family);
+    }
+
+    .stage {
+      min-height: 100vh;
+      width: 100vw;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .alert {
+      width: min(90vw, 48rem);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.55rem;
+      color: var(--text-color);
+      text-align: center;
+      opacity: 0;
+      visibility: hidden;
+      transform: translate3d(0, 0, 0);
+      will-change: opacity, transform;
+    }
+
+    .alert.is-visible {
+      visibility: visible;
+    }
+
+    .label {
+      font-size: clamp(0.54rem, 1vw, 0.74rem);
+      line-height: 1;
+      font-weight: 700;
+      letter-spacing: 0.26em;
+      text-transform: uppercase;
+      color: var(--label-color);
+      white-space: nowrap;
+    }
+
+    .message {
+      max-width: 100%;
+      font-size: clamp(1.8rem, 4.4vw, 3.8rem);
+      line-height: 1.08;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      text-wrap: balance;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+
+    .style-fade {
+      transition: opacity 260ms ease;
+    }
+
+    .style-fade.state-enter {
+      opacity: 0;
+    }
+
+    .style-fade.state-active {
+      opacity: 1;
+    }
+
+    .style-fade.state-exit {
+      opacity: 0;
+    }
+
+    .style-slide {
+      transition: opacity 320ms ease, transform 380ms cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+
+    .style-slide.state-enter {
+      opacity: 0;
+      transform: translate3d(-3rem, 0, 0);
+    }
+
+    .style-slide.state-active {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+
+    .style-slide.state-exit {
+      opacity: 0;
+      transform: translate3d(3rem, 0, 0);
+    }
+
+    .style-minimal.state-enter {
+      transition: none;
+      opacity: 1;
+    }
+
+    .style-minimal.state-active {
+      transition: opacity 900ms ease;
+      opacity: 1;
+    }
+
+    .style-minimal.state-exit {
+      opacity: 0;
+    }
+
+    .hb {
+      position: fixed;
+      bottom: 4px;
+      right: 4px;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      animation: hb 4s ease-in-out infinite;
+    }
+
+    @keyframes hb {
+      0%, 100% { opacity: 0.15; }
+      50% { opacity: 0.05; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="alert" id="alert" aria-live="polite" aria-atomic="true">
+      <div class="label" id="label"></div>
+      <div class="message" id="message"></div>
+    </div>
+  </div>
+  <div class="hb" title="Pulse overlay active"></div>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+
+    const fonts = {
+      mono: "'JetBrains Mono', monospace",
+      inter: "'Inter', sans-serif",
+      russo: "'Russo One', sans-serif"
+    };
+
+    const typeAliases = {
+      follow: 'follow',
+      follower: 'follow',
+      new_follower: 'follow',
+      'new-follower': 'follow',
+      sub: 'sub',
+      subscriber: 'sub',
+      subscription: 'sub',
+      new_subscriber: 'sub',
+      'new-subscriber': 'sub',
+      raid: 'raid',
+      gift: 'gift',
+      giftsub: 'gift',
+      gift_sub: 'gift',
+      'gift-sub': 'gift'
+    };
+
+    const alertTemplates = {
+      follow: {
+        label: 'FOLLOW',
+        message(data) {
+          return `${data.username} just followed`;
+        }
+      },
+      sub: {
+        label: 'SUB',
+        message(data) {
+          return `${data.username} subscribed (Tier ${data.tier})`;
+        }
+      },
+      raid: {
+        label: 'RAID',
+        message(data) {
+          return `${data.username} raided with ${formatCountLabel(data.count, 'viewer')}`;
+        }
+      },
+      gift: {
+        label: 'GIFT',
+        message(data) {
+          return `${data.username} gifted ${formatCountLabel(data.count, 'sub')}`;
+        }
+      }
+    };
+
+    const usernamePool = [
+      'arcanegrain',
+      'voidharbor',
+      'slowmojelly',
+      'pixelcinder',
+      'cloudriderx',
+      'mossylogic',
+      'orbitnoodle',
+      'snackmage',
+      'nightbloomtv',
+      'gritandglow',
+      'lanternskip',
+      'quietcombo',
+      'frostbytejay',
+      'peachstatic',
+      'emberhabit',
+      'runecrate',
+      'signalmoth',
+      'softreset',
+      'bronzebasil',
+      'driftmint',
+      'honeycache',
+      'capslockfox',
+      'neonporch',
+      'starlagoon',
+      'sprintpixel',
+      'northcoil'
+    ];
+
+    const root = document.documentElement;
+    const alertEl = document.getElementById('alert');
+    const labelEl = document.getElementById('label');
+    const messageEl = document.getElementById('message');
+
+    function sanitizeHex(value, fallback) {
+      const cleaned = (value || '').replace(/[^0-9a-f]/gi, '').slice(0, 6);
+      return cleaned.length === 6 ? cleaned : fallback;
+    }
+
+    function hexToRgb(hex) {
+      return {
+        r: parseInt(hex.slice(0, 2), 16),
+        g: parseInt(hex.slice(2, 4), 16),
+        b: parseInt(hex.slice(4, 6), 16)
+      };
+    }
+
+    const textHex = sanitizeHex(params.get('color'), 'ffffff');
+    const accentHex = sanitizeHex(params.get('alert_color'), 'ffffff');
+    const fontKey = params.get('font') || 'mono';
+    const styleKey = ['fade', 'slide', 'minimal'].includes(params.get('style')) ? params.get('style') : 'fade';
+    const parsedDuration = Number(params.get('duration') || '5');
+    const durationMs = Number.isFinite(parsedDuration) && parsedDuration > 0 ? parsedDuration * 1000 : 5000;
+    const platform = params.get('platform') === 'kick' ? 'kick' : 'twitch';
+    const channel = (params.get('channel') || '').trim();
+    const accentRgb = hexToRgb(accentHex);
+
+    root.style.setProperty('--text-color', `#${textHex}`);
+    root.style.setProperty('--accent-color', `#${accentHex}`);
+    root.style.setProperty('--label-color', `rgba(${accentRgb.r}, ${accentRgb.g}, ${accentRgb.b}, 0.58)`);
+    root.style.setProperty('--font-family', fonts[fontKey] || fonts.mono);
+
+    document.body.dataset.platform = platform;
+    if (channel) {
+      document.body.dataset.channel = channel;
+    }
+
+    const queue = [];
+    let isPlaying = false;
+
+    function wait(ms) {
+      return new Promise((resolve) => window.setTimeout(resolve, ms));
+    }
+
+    function animationTimings(style, totalMs) {
+      if (style === 'slide') {
+        const enterMs = 380;
+        const exitMs = 380;
+        return { enterMs, holdMs: Math.max(240, totalMs - enterMs - exitMs), exitMs };
+      }
+
+      if (style === 'minimal') {
+        const enterMs = 0;
+        const exitMs = 900;
+        return { enterMs, holdMs: Math.max(240, totalMs - exitMs), exitMs };
+      }
+
+      const enterMs = 260;
+      const exitMs = 280;
+      return { enterMs, holdMs: Math.max(240, totalMs - enterMs - exitMs), exitMs };
+    }
+
+    function normalizeType(type) {
+      return typeAliases[String(type || '').toLowerCase()] || null;
+    }
+
+    function formatCountLabel(count, noun) {
+      return `${count} ${noun}${count === 1 ? '' : 's'}`;
+    }
+
+    function buildPayload(type, data) {
+      const normalizedType = normalizeType(type);
+      if (!normalizedType) {
+        return null;
+      }
+
+      const username = typeof data.username === 'string' && data.username.trim()
+        ? data.username.trim()
+        : usernamePool[Math.floor(Math.random() * usernamePool.length)];
+      const tier = [1, 2, 3].includes(Number(data.tier)) ? Number(data.tier) : Math.floor(Math.random() * 3) + 1;
+      const defaultCount = normalizedType === 'raid'
+        ? Math.floor(Math.random() * 246) + 5
+        : Math.floor(Math.random() * 20) + 1;
+      const count = Number.isFinite(Number(data.count)) && Number(data.count) > 0
+        ? Math.round(Number(data.count))
+        : defaultCount;
+
+      return {
+        type: normalizedType,
+        username,
+        tier,
+        count
+      };
+    }
+
+    function renderAlert(payload) {
+      const template = alertTemplates[payload.type];
+      labelEl.textContent = template.label;
+      messageEl.textContent = template.message(payload);
+    }
+
+    async function playQueue() {
+      if (isPlaying || queue.length === 0) {
+        return;
+      }
+
+      isPlaying = true;
+
+      while (queue.length > 0) {
+        const nextAlert = queue.shift();
+        const timings = animationTimings(styleKey, durationMs);
+
+        renderAlert(nextAlert);
+        alertEl.className = `alert is-visible style-${styleKey} state-enter`;
+        void alertEl.offsetWidth;
+
+        if (styleKey === 'minimal') {
+          alertEl.classList.remove('state-enter');
+          alertEl.classList.add('state-active');
+        } else {
+          window.requestAnimationFrame(() => {
+            alertEl.classList.remove('state-enter');
+            alertEl.classList.add('state-active');
+          });
+          await wait(timings.enterMs);
+        }
+
+        await wait(timings.holdMs);
+        alertEl.classList.remove('state-active');
+        alertEl.classList.add('state-exit');
+        await wait(timings.exitMs);
+        alertEl.className = 'alert';
+      }
+
+      isPlaying = false;
+    }
+
+    function trigger(type, data = {}) {
+      const payload = buildPayload(type, data);
+      if (!payload) {
+        return false;
+      }
+
+      queue.push(payload);
+      playQueue();
+      return true;
+    }
+
+    function randomItem(list) {
+      return list[Math.floor(Math.random() * list.length)];
+    }
+
+    function demoEvent() {
+      const type = randomItem(['follow', 'sub', 'raid', 'gift']);
+      const username = randomItem(usernamePool);
+
+      if (type === 'sub') {
+        return { type, data: { username, tier: Math.floor(Math.random() * 3) + 1 } };
+      }
+
+      if (type === 'raid') {
+        return { type, data: { username, count: Math.floor(Math.random() * 246) + 5 } };
+      }
+
+      if (type === 'gift') {
+        return { type, data: { username, count: Math.floor(Math.random() * 20) + 1 } };
+      }
+
+      return { type, data: { username } };
+    }
+
+    function scheduleDemo() {
+      const nextDelay = Math.floor(Math.random() * 4001) + 4000;
+      window.setTimeout(() => {
+        const event = demoEvent();
+        trigger(event.type, event.data);
+        scheduleDemo();
+      }, nextDelay);
+    }
+
+    window.PulseAlerts = {
+      trigger,
+      clear() {
+        queue.length = 0;
+      },
+      config: {
+        channel,
+        platform,
+        font: fontKey,
+        color: `#${textHex}`,
+        alertColor: `#${accentHex}`,
+        duration: durationMs / 1000,
+        style: styleKey
+      }
+    };
+
+    scheduleDemo();
+  </script>
+</body>
+</html>

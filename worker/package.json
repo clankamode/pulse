@@ -1,0 +1,12 @@
+{
+  "name": "pulse-api-worker",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2",
+    "wrangler": "^4.56.0"
+  }
+}

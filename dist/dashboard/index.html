@@ -4,48 +4,44 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pulse — Dashboard</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/shared.css">
   <style>
     :root {
-      --bg: #0c0c0d;
-      --surface: #131315;
+      --surface: var(--bg-card);
       --surface-2: #1a1a1d;
-      --border: #1f1f23;
-      --text: #c8c8cc;
-      --text-secondary: #6b6b73;
+      --text: var(--text-primary);
       --text-dim: #44444a;
-      --white: #e4e4e8;
+      --white: var(--accent);
       --focus: rgba(255,255,255,0.06);
       --focus-strong: rgba(255,255,255,0.09);
     }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      font-family: 'Inter', -apple-system, system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
-      display: flex;
-      min-height: 100vh;
-    }
-
     ::selection { background: rgba(255,255,255,0.1); }
 
-    /* --- Sidebar: navigation recedes --- */
+    .dashboard-topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: rgba(12, 12, 13, 0.94);
+      backdrop-filter: blur(16px);
+    }
+
+    .dashboard-shell {
+      display: flex;
+      align-items: stretch;
+      min-height: calc(100vh - 73px);
+    }
+
     .sidebar {
       width: 200px;
       background: var(--surface);
       border-right: 1px solid var(--border);
-      padding: 16px 0;
+      padding: 20px 0;
       flex-shrink: 0;
-      position: fixed;
+      position: sticky;
       top: 0;
-      left: 0;
-      bottom: 0;
+      align-self: flex-start;
+      min-height: calc(100vh - 73px);
       overflow-y: auto;
     }
 
@@ -53,14 +49,14 @@
       display: block;
       padding: 0 16px 16px;
       font-weight: 600;
-      font-size: 0.9rem;
-      color: var(--text-secondary);
+      font-size: 0.95rem;
+      color: var(--accent);
       text-decoration: none;
-      letter-spacing: -0.01em;
+      letter-spacing: 0.02em;
       transition: color 0.2s;
     }
 
-    .sidebar-logo:hover { color: var(--white); }
+    .sidebar-logo:hover { color: var(--accent); }
 
     .sidebar-section {
       padding: 0 8px;
@@ -88,6 +84,7 @@
       border: none;
       background: none;
       text-align: left;
+      text-decoration: none;
       font-family: inherit;
       transition: all 0.12s;
       letter-spacing: 0.005em;
@@ -106,15 +103,14 @@
     /* --- Main: the work holds gravity --- */
     .main {
       flex: 1;
-      margin-left: 200px;
-      display: flex;
-      justify-content: center;
-      padding: 48px 32px 80px;
+      min-width: 0;
     }
 
     .content {
       width: 100%;
-      max-width: 560px;
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 3rem 2rem 4rem;
     }
 
     .page-title {
@@ -426,40 +422,60 @@
       margin: 24px 0;
     }
 
+    .dashboard-footer {
+      margin-top: 1rem;
+    }
+
     /* --- Responsive --- */
-    @media (max-width: 700px) {
+    @media (max-width: 860px) {
+      .dashboard-shell {
+        display: block;
+      }
+
       .sidebar { display: none; }
-      .main { margin-left: 0; padding: 32px 20px 80px; }
+      .content { padding: 2.5rem 1.25rem 4rem; }
       .field-row { grid-template-columns: 1fr; }
       .home-desc { display: none; }
     }
   </style>
 </head>
 <body>
-  <aside class="sidebar">
-    <a href="/" class="sidebar-logo">Pulse</a>
-    <div class="sidebar-section">
-      <button class="sidebar-item active" data-tool="home">Dashboard</button>
+  <nav class="site-nav dashboard-topbar" aria-label="Primary">
+    <a href="/" class="site-brand">Pulse</a>
+    <div class="site-nav-links">
+      <a href="/dashboard/" class="site-nav-link" aria-current="page">Dashboard</a>
+      <a href="/health/" class="site-nav-link">Health</a>
+      <a href="/privacy/" class="site-nav-link">Privacy</a>
+      <a href="/terms/" class="site-nav-link">Terms</a>
+      <a href="https://github.com/clankamode/pulse" class="site-nav-link" rel="noopener noreferrer">GitHub</a>
     </div>
-    <div class="sidebar-section">
-      <div class="sidebar-label">Tools</div>
-      <button class="sidebar-item" data-tool="timer">Timer</button>
-      <button class="sidebar-item" data-tool="viewer">Viewer Count</button>
-      <button class="sidebar-item" data-tool="follower">Follower Count</button>
-      <button class="sidebar-item" data-tool="chat">Chat Box</button>
-      <button class="sidebar-item" data-tool="geo">Geo Location</button>
-      <button class="sidebar-item" data-tool="subcount">Sub Count</button>
-      <button class="sidebar-item" data-tool="alerts">Alerts</button>
-      <button class="sidebar-item" data-tool="combined">Combined Stats</button>
-    </div>
-    <div class="sidebar-section">
-      <div class="sidebar-label">Diagnostics</div>
-      <a class="sidebar-item" href="/health/" style="text-decoration:none;">Health Monitor</a>
-    </div>
-  </aside>
+  </nav>
 
-  <main class="main">
-    <div class="content">
+  <div class="dashboard-shell">
+    <aside class="sidebar">
+      <a href="/" class="sidebar-logo">Pulse</a>
+      <div class="sidebar-section">
+        <button class="sidebar-item active" data-tool="home">Dashboard</button>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Tools</div>
+        <button class="sidebar-item" data-tool="timer">Timer</button>
+        <button class="sidebar-item" data-tool="viewer">Viewer Count</button>
+        <button class="sidebar-item" data-tool="follower">Follower Count</button>
+        <button class="sidebar-item" data-tool="chat">Chat Box</button>
+        <button class="sidebar-item" data-tool="geo">Geo Location</button>
+        <button class="sidebar-item" data-tool="subcount">Sub Count</button>
+        <button class="sidebar-item" data-tool="alerts">Alerts</button>
+        <button class="sidebar-item" data-tool="combined">Combined Stats</button>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Diagnostics</div>
+        <a class="sidebar-item" href="/health/">Health Monitor</a>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="content">
 
       <!-- Home -->
       <div class="panel active" id="panel-home">
@@ -1049,8 +1065,21 @@
         </div>
       </div>
 
-    </div>
-  </main>
+      </div>
+
+      <footer class="site-footer dashboard-footer">
+        <div class="site-footer-inner">
+          <span>Built by Clanka</span>
+          <span>·</span>
+          <a href="/privacy/">Privacy</a>
+          <span>·</span>
+          <a href="/terms/">Terms</a>
+          <span>·</span>
+          <a href="https://github.com/clankamode/pulse" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </footer>
+    </main>
+  </div>
 
   <script>
     const BASE = location.origin;

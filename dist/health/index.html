@@ -5,21 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pulse — Overlay Health</title>
   <meta name="description" content="Pulse overlay health dashboard for active stream scenes.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/shared.css">
   <style>
     :root {
-      --bg: #0c0c0d;
-      --surface: #131315;
+      --surface: var(--bg-card);
       --surface-2: #17171a;
       --surface-3: #1d1d21;
-      --border: #1f1f23;
       --border-strong: #2a2a30;
-      --text: #c8c8cc;
-      --text-secondary: #87878f;
+      --text: var(--text-primary);
       --text-dim: #5a5a61;
-      --white: #e4e4e8;
+      --white: var(--accent);
       --healthy: #657760;
       --healthy-bright: #879b81;
       --degraded: #8d7558;
@@ -29,81 +24,14 @@
       --focus: rgba(255, 255, 255, 0.05);
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: 'Inter', -apple-system, system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-
-    ::selection {
-      background: rgba(255, 255, 255, 0.08);
-    }
-
     a {
       color: inherit;
     }
 
-    .nav {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: 52px;
-      padding: 0 24px;
-      background: rgba(12, 12, 13, 0.94);
-      border-bottom: 1px solid var(--border);
-      backdrop-filter: blur(16px);
-    }
-
-    .nav-logo,
-    .nav-link {
-      text-decoration: none;
-      font-size: 0.82rem;
-      letter-spacing: 0.01em;
-    }
-
-    .nav-logo {
-      font-weight: 600;
-      color: var(--text-secondary);
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 18px;
-    }
-
-    .nav-link {
-      color: var(--text-dim);
-      font-weight: 450;
-      transition: color 0.18s ease;
-    }
-
-    .nav-link:hover,
-    .nav-logo:hover {
-      color: var(--white);
-    }
-
-    .nav-link-current {
-      color: var(--text-secondary);
-    }
-
     .page {
-      width: 100%;
-      max-width: 920px;
+      width: min(100%, 1120px);
       margin: 0 auto;
-      padding: 56px 24px 96px;
+      padding: 3.5rem 2rem 5rem;
     }
 
     .eyebrow {
@@ -376,12 +304,8 @@
     }
 
     @media (max-width: 760px) {
-      .nav {
-        padding: 0 18px;
-      }
-
       .page {
-        padding: 40px 16px 72px;
+        padding: 2.75rem 1.25rem 4rem;
       }
 
       .hero-grid {
@@ -433,11 +357,14 @@
   </style>
 </head>
 <body>
-  <nav class="nav" aria-label="Primary">
-    <a class="nav-logo" href="../">Pulse</a>
-    <div class="nav-links">
-      <a class="nav-link" href="../dashboard/">Dashboard</a>
-      <span class="nav-link nav-link-current">Health</span>
+  <nav class="site-nav" aria-label="Primary">
+    <a href="/" class="site-brand">Pulse</a>
+    <div class="site-nav-links">
+      <a href="/dashboard/" class="site-nav-link">Dashboard</a>
+      <a href="/health/" class="site-nav-link" aria-current="page">Health</a>
+      <a href="/privacy/" class="site-nav-link">Privacy</a>
+      <a href="/terms/" class="site-nav-link">Terms</a>
+      <a href="https://github.com/clankamode/pulse" class="site-nav-link" rel="noopener noreferrer">GitHub</a>
     </div>
   </nav>
 
@@ -502,6 +429,18 @@
       <p>Each Pulse overlay emits a recurring heartbeat with timing and latency metadata. This page watches that stream, highlights missed heartbeats, and records recovery events so operators can verify scene health before viewers ever notice drift.</p>
     </section>
   </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <span>Built by Clanka</span>
+      <span>·</span>
+      <a href="/privacy/">Privacy</a>
+      <span>·</span>
+      <a href="/terms/">Terms</a>
+      <span>·</span>
+      <a href="https://github.com/clankamode/pulse" rel="noopener noreferrer">GitHub</a>
+    </div>
+  </footer>
 
   <script>
     const overlays = [

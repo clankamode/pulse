@@ -97,6 +97,19 @@
       font-variant-numeric: tabular-nums;
     }
 
+    .demo-mark {
+      font-size: 0.28em;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      opacity: 0.45;
+      margin-left: 0.2em;
+      display: none;
+    }
+
+    .demo-mark.visible {
+      display: inline;
+    }
+
     .hb {
       position: fixed;
       bottom: 4px;
@@ -119,6 +132,7 @@
     <div class="count-row">
       <span class="platform-icon" id="platform-icon" aria-hidden="true"></span>
       <span class="count" id="count">---</span>
+      <span class="demo-mark" id="demo-mark">Demo</span>
     </div>
     <div class="goal" id="goal-block">
       <div class="goal-track" aria-hidden="true">
@@ -130,7 +144,8 @@
   <div class="hb" title="Pulse overlay active"></div>
   <script>
     const params = new URLSearchParams(window.location.search);
-    const platform = params.get('platform') === 'kick' ? 'kick' : 'twitch';
+    const platformParam = (params.get('platform') || 'twitch').toLowerCase();
+    const platform = platformParam === 'kick' || platformParam === 'youtube' ? platformParam : 'twitch';
     const channel = (params.get('channel') || '').trim();
     const font = params.get('font') || 'mono';
     const colorParam = (params.get('color') || 'ffffff').replace(/[^0-9a-f]/gi, '').slice(0, 6);
@@ -149,12 +164,14 @@
 
     const icons = {
       twitch: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg>',
+      youtube: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12z"/></svg>',
       kick: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.333 0v24h5.338V14.68l2.66-2.67 5.338 12h5.998L13.33 9.34 20.667 0h-5.998l-5.998 7.33V0z"/></svg>'
     };
 
     const overlayEl = document.getElementById('overlay');
     const countEl = document.getElementById('count');
     const iconEl = document.getElementById('platform-icon');
+    const demoMarkEl = document.getElementById('demo-mark');
     const goalBlockEl = document.getElementById('goal-block');
     const goalFillEl = document.getElementById('goal-fill');
     const goalTextEl = document.getElementById('goal-text');
@@ -175,7 +192,7 @@
 
     let lastKnownCount = null;
     let lastSuccessfulFetchAt = 0;
-    let simulatedCount = Math.floor(Math.random() * 49001) + 1000;
+    let lastWasDemo = false;
 
     function hexToRgb(hex) {
       const normalized = hex.replace('#', '');
@@ -212,6 +229,7 @@
 
     function render() {
       countEl.textContent = formatCount(lastKnownCount);
+      demoMarkEl.classList.toggle('visible', lastWasDemo && lastKnownCount !== null);
       overlayEl.classList.toggle('stale', isDataStale());
 
       if (lastKnownCount !== null) {
@@ -219,28 +237,47 @@
       }
     }
 
-    async function fetchFollowerCount(source) {
-      // Replace this with a real platform/channel API call when credentials are available.
-      const drift = Math.floor(Math.random() * 1801) - 900;
-      simulatedCount = Math.max(1000, Math.min(50000, simulatedCount + drift));
-      return simulatedCount;
+    async function fetchFollowerCount() {
+      if (!channel) {
+        return { ok: false, reason: 'missing_channel' };
+      }
+
+      const resp = await fetch(
+        `https://pulse-api.clankamode.workers.dev/api/followers?platform=${encodeURIComponent(platform)}&channel=${encodeURIComponent(channel)}`
+      );
+      if (!resp.ok) {
+        return { ok: false, reason: 'http_' + resp.status };
+      }
+
+      const data = await resp.json();
+      if (data.error || typeof data.count !== 'number' || !Number.isFinite(data.count)) {
+        return { ok: false, reason: data.error || 'invalid_count' };
+      }
+
+      return { ok: true, count: Math.round(data.count), demo: Boolean(data.demo) };
     }
 
     async function refreshFollowerCount() {
+      if (!channel) {
+        lastKnownCount = null;
+        lastWasDemo = false;
+        render();
+        return;
+      }
+
       try {
-        const count = await fetchFollowerCount({ platform, channel });
-        if (!Number.isFinite(count)) {
-          throw new Error('Follower count must be numeric.');
+        const result = await fetchFollowerCount();
+        if (!result.ok) {
+          throw new Error(result.reason || 'Follower count refresh failed.');
         }
 
-        lastKnownCount = Math.round(count);
+        lastKnownCount = result.count;
         lastSuccessfulFetchAt = Date.now();
+        lastWasDemo = result.demo;
         render();
       } catch (error) {
         console.warn('Follower count refresh failed.', error);
-        if (lastKnownCount !== null) {
-          render();
-        }
+        render();
       }
     }
 

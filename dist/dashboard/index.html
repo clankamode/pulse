@@ -1189,9 +1189,9 @@
           size: document.getElementById('timer-size')?.value || '4',
           labels: document.getElementById('timer-labels')?.classList.contains('on') ? '1' : '0'
         });
-        setToolOutput('timer-url', 'timer-copy', 'timer-preview', `${BASE}/overlays/timer/?${params}`, 'Set a target date');
+        setToolOutput('timer-url', 'timer-copy', 'timer-preview', `${BASE}/overlays/timer/?${params}`, 'Set a date to generate URL');
       } else {
-        setToolOutput('timer-url', 'timer-copy', 'timer-preview', '', 'Set a target date');
+        setToolOutput('timer-url', 'timer-copy', 'timer-preview', '', 'Set a date to generate URL');
       }
 
       // Viewer

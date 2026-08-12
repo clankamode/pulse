@@ -38,8 +38,9 @@
     }
 
     .chat-feed {
-      width: min(38rem, calc(100vw - 36px));
-      height: calc(100vh - 36px);
+      width: 100%;
+      flex: 1;
+      min-height: 0;
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
@@ -158,6 +159,47 @@
       word-break: break-word;
     }
 
+    .chat-column {
+      width: min(38rem, calc(100vw - 36px));
+      height: calc(100vh - 36px);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: stretch;
+    }
+
+    .status-note {
+      display: none;
+      margin: 0 0 10px;
+      padding: 0.55em 0.75em;
+      background: rgba(17, 17, 17, 0.72);
+      color: rgba(255, 255, 255, 0.62);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.78rem;
+      line-height: 1.35;
+      letter-spacing: 0.01em;
+    }
+
+    .status-note.visible {
+      display: block;
+    }
+
+    .demo-mark {
+      position: fixed;
+      top: 8px;
+      left: 10px;
+      display: none;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.42);
+    }
+
+    .demo-mark.visible {
+      display: block;
+    }
+
     .hb {
       position: fixed;
       bottom: 4px;
@@ -177,8 +219,12 @@
 </head>
 <body>
   <div class="chat-shell">
-    <div class="chat-feed" id="chat-feed" aria-live="polite" aria-label="Live chat overlay"></div>
+    <div class="chat-column">
+      <div class="status-note" id="chat-status" role="status" aria-live="polite"></div>
+      <div class="chat-feed" id="chat-feed" aria-live="polite" aria-label="Live chat overlay"></div>
+    </div>
   </div>
+  <div class="demo-mark" id="demo-mark">Demo</div>
   <div class="hb" title="Pulse overlay active"></div>
   <script>
     const params = new URLSearchParams(window.location.search);
@@ -215,7 +261,8 @@
       color: normalizeColor(params.get('color')),
       size: clamp(parseNumber(params.get('size'), 1.4), 0.8, 3.2),
       max: clamp(Math.floor(parseNumber(params.get('max'), 8)), 1, 20),
-      fade: params.get('fade') !== '0'
+      fade: params.get('fade') !== '0',
+      forceDemo: params.get('demo') === '1'
     };
 
     const demoUsers = [
@@ -264,6 +311,8 @@
     };
 
     const feed = document.getElementById('chat-feed');
+    const statusEl = document.getElementById('chat-status');
+    const demoMarkEl = document.getElementById('demo-mark');
     const cleanup = [];
     let demoTimer = null;
     let reconnectTimer = null;
@@ -275,6 +324,31 @@
     document.body.dataset.platform = config.platform;
     document.documentElement.style.setProperty('--message-color', config.color);
     document.documentElement.style.setProperty('--message-size', config.size + 'rem');
+
+    function setStatus(message) {
+      if (!statusEl) {
+        return;
+      }
+      if (message) {
+        statusEl.textContent = message;
+        statusEl.classList.add('visible');
+      } else {
+        statusEl.textContent = '';
+        statusEl.classList.remove('visible');
+      }
+    }
+
+    function setDemoMark(visible) {
+      if (demoMarkEl) {
+        demoMarkEl.classList.toggle('visible', Boolean(visible));
+      }
+    }
+
+    function platformLabel(platform) {
+      if (platform === 'kick') return 'Kick';
+      if (platform === 'youtube') return 'YouTube';
+      return 'Twitch';
+    }
 
     function hashString(input) {
       let hash = 0;
@@ -516,22 +590,27 @@
     }
 
     function startDemoMode() {
+      setStatus('');
+      setDemoMark(true);
+
       if (activeMode === 'demo') {
-        return function stopDemoMode() {
+        return function stopActiveDemo() {
           if (demoTimer) {
             window.clearTimeout(demoTimer);
             demoTimer = null;
           }
+          setDemoMark(false);
         };
       }
 
       activeMode = 'demo';
       scheduleDemoTick();
-      return function stopDemoMode() {
+      return function stopActiveDemo() {
         if (demoTimer) {
           window.clearTimeout(demoTimer);
           demoTimer = null;
         }
+        setDemoMark(false);
       };
     }
 
@@ -541,6 +620,7 @@
         window.clearTimeout(demoTimer);
         demoTimer = null;
       }
+      setDemoMark(false);
     }
 
     function stopTwitchMode() {
@@ -561,9 +641,14 @@
       }
     }
 
-    function fallbackToDemo() {
+    function showIdleStatus(message) {
+      stopDemoMode();
       stopTwitchMode();
-      startDemoMode();
+      activeMode = 'idle';
+      setStatus(message);
+      return function stopIdleStatus() {
+        setStatus('');
+      };
     }
 
     function scheduleReconnect(channel) {
@@ -572,7 +657,9 @@
       }
 
       if (reconnectAttempts >= 5) {
-        fallbackToDemo();
+        allowReconnect = false;
+        activeMode = 'idle';
+        setStatus('Disconnected from Twitch chat');
         return;
       }
 
@@ -632,12 +719,13 @@
     function connectToTwitch(channel) {
       const normalizedChannel = normalizeChannelName(channel);
       if (!normalizedChannel || typeof window.WebSocket !== 'function') {
-        fallbackToDemo();
+        showIdleStatus('Unable to connect to Twitch chat');
         return;
       }
 
       stopDemoMode();
       stopTwitchMode();
+      setStatus('');
 
       allowReconnect = true;
       activeMode = 'twitch';
@@ -650,6 +738,7 @@
         }
 
         reconnectAttempts = 0;
+        setStatus('');
         sendIrcLine('PASS oauth:dummy');
         sendIrcLine('NICK justinfan' + Math.floor(Math.random() * 99999));
         sendIrcLine('CAP REQ :twitch.tv/tags twitch.tv/commands');
@@ -688,15 +777,23 @@
       return {
         start() {
           const channel = normalizeChannelName(config.channel);
-          if (config.platform === 'twitch' && channel) {
+
+          if (config.forceDemo || !channel) {
+            return startDemoMode();
+          }
+
+          if (config.platform === 'twitch') {
             connectToTwitch(channel);
             return function stopConnector() {
               stopTwitchMode();
               stopDemoMode();
+              setStatus('');
             };
           }
 
-          return startDemoMode();
+          return showIdleStatus(
+            platformLabel(config.platform) + ' live chat is not available yet'
+          );
         },
         push(payload) {
           addMessage(payload);

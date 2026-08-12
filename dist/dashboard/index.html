@@ -328,14 +328,23 @@
       letter-spacing: 0.005em;
     }
 
-    .btn-copy:hover {
+    .btn-copy:hover:not(:disabled) {
       color: var(--white);
       background: var(--focus-strong);
       border-color: #2a2a30;
     }
 
+    .btn-copy:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
     .btn-copy.copied {
       color: var(--text-dim);
+    }
+
+    .btn-copy.copy-failed {
+      color: #c97a7a;
     }
 
     /* --- Preview: summoned, not persistent --- */
@@ -1140,6 +1149,33 @@
       return document.querySelector(`#${id} .tab.active`)?.dataset.val || '';
     }
 
+    function isReadyUrl(text) {
+      return Boolean(text) && text.startsWith(BASE + '/');
+    }
+
+    function setToolOutput(urlId, copyId, previewId, readyUrl, emptyLabel) {
+      const urlEl = document.getElementById(urlId);
+      const copyBtn = document.getElementById(copyId);
+      const preview = previewId ? document.getElementById(previewId) : null;
+
+      if (readyUrl) {
+        if (urlEl) urlEl.textContent = readyUrl;
+        if (copyBtn) {
+          copyBtn.disabled = false;
+          copyBtn.setAttribute('aria-disabled', 'false');
+        }
+        if (preview) preview.src = readyUrl;
+        return;
+      }
+
+      if (urlEl) urlEl.textContent = emptyLabel;
+      if (copyBtn) {
+        copyBtn.disabled = true;
+        copyBtn.setAttribute('aria-disabled', 'true');
+      }
+      if (preview) preview.removeAttribute('src');
+    }
+
     function updateUrls() {
       // Timer
       const td = document.getElementById('timer-date')?.value;
@@ -1153,9 +1189,9 @@
           size: document.getElementById('timer-size')?.value || '4',
           labels: document.getElementById('timer-labels')?.classList.contains('on') ? '1' : '0'
         });
-        const url = `${BASE}/overlays/timer/?${params}`;
-        document.getElementById('timer-url').textContent = url;
-        document.getElementById('timer-preview').src = url;
+        setToolOutput('timer-url', 'timer-copy', 'timer-preview', `${BASE}/overlays/timer/?${params}`, 'Set a target date');
+      } else {
+        setToolOutput('timer-url', 'timer-copy', 'timer-preview', '', 'Set a target date');
       }
 
       // Viewer
@@ -1169,9 +1205,9 @@
           size: document.getElementById('viewer-size')?.value || '4',
           icon: document.getElementById('viewer-icon')?.classList.contains('on') ? '1' : '0'
         });
-        const url = `${BASE}/overlays/viewer/?${params}`;
-        document.getElementById('viewer-url').textContent = url;
-        document.getElementById('viewer-preview').src = url;
+        setToolOutput('viewer-url', 'viewer-copy', 'viewer-preview', `${BASE}/overlays/viewer/?${params}`, 'Enter a channel name');
+      } else {
+        setToolOutput('viewer-url', 'viewer-copy', 'viewer-preview', '', 'Enter a channel name');
       }
 
       // Follower
@@ -1186,7 +1222,9 @@
         const gOn = document.getElementById('follower-goal-toggle')?.classList.contains('on');
         const gVal = document.getElementById('follower-goal')?.value;
         if (gOn && gVal) params.set('goal', gVal);
-        document.getElementById('follower-url').textContent = `${BASE}/overlays/follower/?${params}`;
+        setToolOutput('follower-url', 'follower-copy', null, `${BASE}/overlays/follower/?${params}`, 'Enter a channel name');
+      } else {
+        setToolOutput('follower-url', 'follower-copy', null, '', 'Enter a channel name');
       }
 
       // Chat
@@ -1201,9 +1239,9 @@
           max: document.getElementById('chat-max')?.value || '8',
           fade: document.getElementById('chat-fade')?.classList.contains('on') ? '1' : '0'
         });
-        const url = `${BASE}/overlays/chat/?${params}`;
-        document.getElementById('chat-url').textContent = url;
-        document.getElementById('chat-preview').src = url;
+        setToolOutput('chat-url', 'chat-copy', 'chat-preview', `${BASE}/overlays/chat/?${params}`, 'Enter a channel name');
+      } else {
+        setToolOutput('chat-url', 'chat-copy', 'chat-preview', '', 'Enter a channel name');
       }
 
       // Geo
@@ -1220,9 +1258,9 @@
         });
         const tz = document.getElementById('geo-timezone')?.value?.trim();
         if (tz) params.set('timezone', tz);
-        const url = `${BASE}/overlays/geo/?${params}`;
-        document.getElementById('geo-url').textContent = url;
-        document.getElementById('geo-preview').src = url;
+        setToolOutput('geo-url', 'geo-copy', 'geo-preview', `${BASE}/overlays/geo/?${params}`, 'Enter a city name');
+      } else {
+        setToolOutput('geo-url', 'geo-copy', 'geo-preview', '', 'Enter a city name');
       }
 
       // Sub Count
@@ -1239,9 +1277,9 @@
         const sgOn = document.getElementById('sub-goal-toggle')?.classList.contains('on');
         const sgVal = document.getElementById('sub-goal')?.value;
         if (sgOn && sgVal) params.set('goal', sgVal);
-        const url = `${BASE}/overlays/subcount/?${params}`;
-        document.getElementById('sub-url').textContent = url;
-        document.getElementById('sub-preview').src = url;
+        setToolOutput('sub-url', 'sub-copy', 'sub-preview', `${BASE}/overlays/subcount/?${params}`, 'Enter a channel name');
+      } else {
+        setToolOutput('sub-url', 'sub-copy', 'sub-preview', '', 'Enter a channel name');
       }
 
       // Alerts
@@ -1256,9 +1294,9 @@
           duration: document.getElementById('alerts-duration')?.value || '5',
           style: getTab('alerts-style-tabs')
         });
-        const url = `${BASE}/overlays/alerts/?${params}`;
-        document.getElementById('alerts-url').textContent = url;
-        document.getElementById('alerts-preview').src = url;
+        setToolOutput('alerts-url', 'alerts-copy', 'alerts-preview', `${BASE}/overlays/alerts/?${params}`, 'Enter a channel name');
+      } else {
+        setToolOutput('alerts-url', 'alerts-copy', 'alerts-preview', '', 'Enter a channel name');
       }
 
       // Combined
@@ -1275,22 +1313,63 @@
           show_followers: document.getElementById('combined-followers')?.classList.contains('on') ? '1' : '0',
           show_uptime: document.getElementById('combined-uptime')?.classList.contains('on') ? '1' : '0'
         });
-        const url = `${BASE}/overlays/combined/?${params}`;
-        document.getElementById('combined-url').textContent = url;
-        document.getElementById('combined-preview').src = url;
+        setToolOutput('combined-url', 'combined-copy', 'combined-preview', `${BASE}/overlays/combined/?${params}`, 'Enter a channel name');
+      } else {
+        setToolOutput('combined-url', 'combined-copy', 'combined-preview', '', 'Enter a channel name');
       }
+    }
+
+    function copyText(text) {
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        return navigator.clipboard.writeText(text);
+      }
+
+      return new Promise((resolve, reject) => {
+        const area = document.createElement('textarea');
+        area.value = text;
+        area.setAttribute('readonly', '');
+        area.style.position = 'fixed';
+        area.style.opacity = '0';
+        document.body.appendChild(area);
+        area.select();
+        try {
+          if (!document.execCommand('copy')) {
+            reject(new Error('copy_failed'));
+          } else {
+            resolve();
+          }
+        } catch (error) {
+          reject(error);
+        } finally {
+          document.body.removeChild(area);
+        }
+      });
     }
 
     // Copy
     document.querySelectorAll('.btn-copy').forEach(btn => {
       btn.addEventListener('click', () => {
+        if (btn.disabled) return;
         const urlEl = btn.previousElementSibling;
-        const text = urlEl.textContent;
-        if (text.startsWith('Set') || text.startsWith('Enter')) return;
-        navigator.clipboard.writeText(text).then(() => {
+        const text = urlEl?.textContent || '';
+        if (!isReadyUrl(text)) return;
+
+        copyText(text).then(() => {
           btn.textContent = 'Copied';
           btn.classList.add('copied');
-          setTimeout(() => { btn.textContent = 'Copy to OBS'; btn.classList.remove('copied'); }, 1500);
+          btn.classList.remove('copy-failed');
+          setTimeout(() => {
+            btn.textContent = 'Copy to OBS';
+            btn.classList.remove('copied');
+          }, 1500);
+        }).catch(() => {
+          btn.textContent = 'Copy failed';
+          btn.classList.add('copy-failed');
+          btn.classList.remove('copied');
+          setTimeout(() => {
+            btn.textContent = 'Copy to OBS';
+            btn.classList.remove('copy-failed');
+          }, 1500);
         });
       });
     });

@@ -57,6 +57,14 @@
       color: #ff4444;
       font-family: 'Inter', sans-serif;
     }
+    .demo-mark {
+      font-size: 0.28em;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      opacity: 0.45;
+      margin-left: 0.35em;
+      align-self: center;
+    }
   </style>
 </head>
 <body>
@@ -93,45 +101,53 @@
 
     let lastCount = null;
     let lastFetchOk = 0;
+    let lastWasDemo = false;
 
-    function render(count, stale) {
+    function render(count, stale, demo) {
       let html = '';
       if (showIcon && icons[platform]) {
         html += `<span class="platform-icon">${icons[platform]}</span>`;
       }
       const formatted = count !== null ? count.toLocaleString() : '---';
-      el.innerHTML = html + `<span class="count">${formatted}</span>`;
+      html += `<span class="count">${formatted}</span>`;
+      if (demo && count !== null) {
+        html += `<span class="demo-mark">Demo</span>`;
+      }
+      el.innerHTML = html;
       el.classList.toggle('stale', stale);
     }
 
-    // For demo / when no API is available, show a simulated count
-    // In production this would hit the Pulse API worker
+    function applyFailure() {
+      if (lastCount !== null) {
+        render(lastCount, Date.now() - lastFetchOk > 60000, lastWasDemo);
+      } else {
+        render(null, false, false);
+      }
+    }
+
     async function fetchCount() {
       if (!channel) {
-        render(null, false);
+        lastCount = null;
+        lastWasDemo = false;
+        render(null, false, false);
         return;
       }
 
       try {
-        // Try our API proxy first
-        const resp = await fetch(`https://pulse-api.clankamode.workers.dev/api/viewers?platform=${platform}&channel=${encodeURIComponent(channel)}`);
+        const resp = await fetch(`https://pulse-api.clankamode.workers.dev/api/viewers?platform=${encodeURIComponent(platform)}&channel=${encodeURIComponent(channel)}`);
         if (resp.ok) {
           const data = await resp.json();
-          lastCount = data.count;
-          lastFetchOk = Date.now();
-          render(lastCount, false);
-          return;
+          if (!data.error && typeof data.count === 'number' && Number.isFinite(data.count)) {
+            lastCount = data.count;
+            lastFetchOk = Date.now();
+            lastWasDemo = Boolean(data.demo);
+            render(lastCount, false, lastWasDemo);
+            return;
+          }
         }
-      } catch(e) {}
+      } catch (e) {}
 
-      // Fallback: show last known count as stale
-      if (lastCount !== null) {
-        render(lastCount, Date.now() - lastFetchOk > 60000);
-      } else {
-        // Demo mode: show simulated count
-        lastCount = Math.floor(Math.random() * 5000) + 100;
-        render(lastCount, false);
-      }
+      applyFailure();
     }
 
     fetchCount();

@@ -32,6 +32,7 @@
       letter-spacing: -0.03em;
       white-space: nowrap;
       padding: 0.08em 0.14em;
+      transition: opacity 160ms ease;
     }
 
     .overlay.vertical {
@@ -39,6 +40,10 @@
       align-items: flex-start;
       gap: 0.16em;
       white-space: normal;
+    }
+
+    .overlay.stale {
+      opacity: 0.5;
     }
 
     .metric {
@@ -68,6 +73,19 @@
       transform: translateY(-0.04em);
     }
 
+    .demo-mark {
+      font-size: 0.28em;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      opacity: 0.45;
+      align-self: center;
+      display: none;
+    }
+
+    .demo-mark.visible {
+      display: inline;
+    }
+
     .hb {
       position: fixed;
       bottom: 4px;
@@ -90,6 +108,7 @@
   <div class="hb" title="Pulse overlay active"></div>
   <script>
     const params = new URLSearchParams(window.location.search);
+    const API_BASE = 'https://pulse-api.clankamode.workers.dev';
 
     const fonts = {
       mono: "'JetBrains Mono', monospace",
@@ -117,30 +136,20 @@
       return input === 'vertical' ? 'vertical' : 'horizontal';
     }
 
-    function hashString(value) {
-      let hash = 2166136261;
-      for (let index = 0; index < value.length; index += 1) {
-        hash ^= value.charCodeAt(index);
-        hash = Math.imul(hash, 16777619);
-      }
-      return hash >>> 0;
-    }
-
-    function createGenerator(seed) {
-      let state = seed || 1;
-      return function nextRandom() {
-        state = (state * 1664525 + 1013904223) >>> 0;
-        return state / 4294967296;
-      };
+    function parsePlatform(input) {
+      const value = (input || 'twitch').toLowerCase();
+      return value === 'kick' || value === 'youtube' ? value : 'twitch';
     }
 
     function formatCount(value) {
+      if (value === null || !Number.isFinite(value)) return '---';
       return Math.max(0, Math.round(value)).toLocaleString();
     }
 
     function formatCompact(value) {
+      if (value === null || !Number.isFinite(value)) return '---';
       const abs = Math.abs(value);
-      const options = { maximumFractionDigits: abs >= 1000000 ? 1 : 1 };
+      const options = { maximumFractionDigits: 1 };
       if (abs >= 1000000) {
         return `${(value / 1000000).toLocaleString('en-US', options)}M`;
       }
@@ -150,27 +159,17 @@
       return formatCount(value);
     }
 
-    function formatUptime(totalSeconds) {
-      const safeSeconds = Math.max(0, Math.floor(totalSeconds));
-      const hours = Math.floor(safeSeconds / 3600);
-      const minutes = Math.floor((safeSeconds % 3600) / 60);
-      const seconds = safeSeconds % 60;
-      return [
-        String(hours).padStart(2, '0'),
-        String(minutes).padStart(2, '0'),
-        String(seconds).padStart(2, '0')
-      ].join(':');
-    }
-
     const config = {
       channel: (params.get('channel') || '').trim(),
-      platform: params.get('platform') === 'kick' ? 'kick' : 'twitch',
+      platform: parsePlatform(params.get('platform')),
       font: fonts[params.get('font')] ? params.get('font') : 'mono',
       color: `#${parseHex(params.get('color'), 'ffffff')}`,
       sizeRem: parsePositiveNumber(params.get('size'), 1.2),
       layout: parseLayout(params.get('layout')),
       showViewers: parseBooleanFlag(params.get('show_viewers'), true),
       showFollowers: parseBooleanFlag(params.get('show_followers'), true),
+      // Stream uptime / FPS have no Pulse source yet — toggles keep the slot,
+      // but values stay --- instead of inventing page-load age or "60".
       showUptime: parseBooleanFlag(params.get('show_uptime'), true),
       showFps: parseBooleanFlag(params.get('show_fps'), false),
       divider: params.get('divider') || '·'
@@ -182,31 +181,25 @@
     overlayEl.style.color = config.color;
     overlayEl.classList.toggle('vertical', config.layout === 'vertical');
 
-    const seed = hashString(`${config.channel}:${config.platform}:combined`);
-    const nextRandom = createGenerator(seed);
-    const startedAt = Date.now();
-
     const state = {
-      viewers: Math.floor(150 + nextRandom() * 4800),
-      followers: Math.floor(1200 + nextRandom() * 890000)
+      viewers: null,
+      followers: null,
+      viewersDemo: false,
+      followersDemo: false,
+      lastFetchOk: 0
     };
-
-    function bumpValue(current, minimum, maximum, range, floorAt) {
-      const drift = Math.round((nextRandom() - 0.5) * range);
-      const stepped = current + drift;
-      return Math.max(floorAt, Math.min(maximum, Math.max(minimum, stepped)));
-    }
-
-    function refreshDemoMetrics() {
-      const viewerRange = config.platform === 'kick' ? 180 : 260;
-      const followerRange = config.platform === 'kick' ? 3200 : 4500;
-      state.viewers = bumpValue(state.viewers, 20, 999999, viewerRange, 20);
-      state.followers = bumpValue(state.followers, 100, 9999999, followerRange, 100);
-      render();
-    }
 
     function buildMetric(icon, value) {
       return `<span class="metric"><span class="metric-icon" aria-hidden="true">${icon}</span><span class="metric-value">${value}</span></span>`;
+    }
+
+    function isDemo() {
+      return (state.viewersDemo && state.viewers !== null) ||
+        (state.followersDemo && state.followers !== null);
+    }
+
+    function isStale() {
+      return state.lastFetchOk > 0 && Date.now() - state.lastFetchOk > 60000;
     }
 
     function render() {
@@ -221,30 +214,99 @@
       }
 
       if (config.showUptime) {
-        const uptimeSeconds = Math.floor((Date.now() - startedAt) / 1000);
-        metrics.push(buildMetric('⏱', formatUptime(uptimeSeconds)));
+        metrics.push(buildMetric('⏱', '---'));
       }
 
       if (config.showFps) {
-        metrics.push(buildMetric('◆', '60'));
+        metrics.push(buildMetric('◆', '---'));
       }
 
       if (metrics.length === 0) {
         metrics.push(buildMetric('◆', 'Pulse'));
       }
 
+      const demoMark = isDemo()
+        ? '<span class="demo-mark visible">Demo</span>'
+        : '';
+
       if (config.layout === 'vertical') {
-        overlayEl.innerHTML = metrics.join('');
+        overlayEl.innerHTML = metrics.join('') + demoMark;
+      } else {
+        const divider = `<span class="divider" aria-hidden="true">${config.divider}</span>`;
+        overlayEl.innerHTML = metrics.join(divider) + demoMark;
+      }
+
+      overlayEl.classList.toggle('stale', isStale());
+    }
+
+    async function fetchMetric(route) {
+      if (!config.channel) {
+        return { ok: false, reason: 'missing_channel' };
+      }
+
+      const resp = await fetch(
+        `${API_BASE}/api/${route}?platform=${encodeURIComponent(config.platform)}&channel=${encodeURIComponent(config.channel)}`
+      );
+      if (!resp.ok) {
+        return { ok: false, reason: 'http_' + resp.status };
+      }
+
+      const data = await resp.json();
+      if (data.error || typeof data.count !== 'number' || !Number.isFinite(data.count)) {
+        return { ok: false, reason: data.error || 'invalid_count' };
+      }
+
+      return { ok: true, count: Math.round(data.count), demo: Boolean(data.demo) };
+    }
+
+    async function refreshMetrics() {
+      if (!config.channel) {
+        state.viewers = null;
+        state.followers = null;
+        state.viewersDemo = false;
+        state.followersDemo = false;
+        state.lastFetchOk = 0;
+        render();
         return;
       }
 
-      const divider = `<span class="divider" aria-hidden="true">${config.divider}</span>`;
-      overlayEl.innerHTML = metrics.join(divider);
+      const tasks = [];
+      if (config.showViewers) {
+        tasks.push(
+          fetchMetric('viewers').then((result) => {
+            if (result.ok) {
+              state.viewers = result.count;
+              state.viewersDemo = result.demo;
+              return true;
+            }
+            return false;
+          }).catch(() => false)
+        );
+      }
+      if (config.showFollowers) {
+        tasks.push(
+          fetchMetric('followers').then((result) => {
+            if (result.ok) {
+              state.followers = result.count;
+              state.followersDemo = result.demo;
+              return true;
+            }
+            return false;
+          }).catch(() => false)
+        );
+      }
+
+      const results = await Promise.all(tasks);
+      if (results.some(Boolean)) {
+        state.lastFetchOk = Date.now();
+      }
+      // On total failure keep last-known values (stale) — never invent unlabeled counts.
+      render();
     }
 
     render();
-    setInterval(render, 1000);
-    setInterval(refreshDemoMetrics, 30000);
+    refreshMetrics();
+    setInterval(refreshMetrics, 15000);
   </script>
 </body>
 </html>

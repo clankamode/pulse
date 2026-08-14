@@ -23,7 +23,7 @@ Every overlay includes a built-in **heartbeat indicator** — a tiny pulsing dot
 | **Geo Location** | Current city, weather, and local time | wttr.in |
 | **Sub Count** | Subscriber count with goal tracking | Demo (needs OAuth) |
 | **Alerts** | Follow, sub, raid, and gift sub notifications | Demo (needs event source) |
-| **Combined Stats** | All metrics in one compact HUD | Twitch, YouTube, Kick |
+| **Combined Stats** | Compact viewers + followers HUD | Twitch, YouTube, Kick (uptime/FPS slots stay empty until a real source exists) |
 
 ## Quick Start
 
@@ -115,7 +115,7 @@ All overlays are configured via URL parameters. Common params:
 
 **Alerts**: `style` (fade/slide/minimal), `duration` (seconds), `alert_color` (hex)
 
-**Combined Stats**: `layout` (horizontal/vertical), `show_viewers`, `show_followers`, `show_uptime` (all 1/0), `divider` (character)
+**Combined Stats**: `layout` (horizontal/vertical), `show_viewers`, `show_followers`, `show_uptime`, `show_fps` (all 1/0), `divider` (character). Uptime and FPS render as `---` until a real stream-source exists — they never invent page-load age or a hardcoded 60.
 
 ## Health Monitor
 

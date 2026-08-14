@@ -3,7 +3,8 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "honesty-check": "node ../scripts/honesty-check.mjs"
   },
   "devDependencies": {
     "typescript": "^5.9.2",

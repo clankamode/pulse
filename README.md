@@ -23,7 +23,7 @@ Every overlay includes a built-in **heartbeat indicator** — a tiny pulsing dot
 | **Geo Location** | Current city, weather, and local time | wttr.in |
 | **Sub Count** | Subscriber count with goal tracking | Demo (needs OAuth) |
 | **Alerts** | Follow, sub, raid, and gift sub notifications | Demo (needs event source) |
-| **Combined Stats** | All metrics in one compact HUD | Twitch, YouTube, Kick |
+| **Combined Stats** | Compact viewers + followers HUD (overlay-session uptime optional) | Twitch, YouTube, Kick |
 
 ## Quick Start
 

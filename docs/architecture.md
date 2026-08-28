@@ -29,11 +29,10 @@ Most public streaming metrics (viewer count, follower count, live status) are av
 | Kick | Pusher WS | Public API | Pusher WS | API (auth) | Pusher WS (auth) |
 
 ### Health Monitoring
-The `/health` endpoint provides:
-- Per-overlay liveness status
-- API endpoint response times
-- WebSocket connection state
-- Memory usage trends
-- Error rate over rolling window
+There is no `/health` API and no overlay telemetry stream.
 
-This is exposed both as a standalone dashboard and as data available to the combined overlay HUD.
+What exists today:
+- A local CSS heartbeat dot on each overlay (render-loop liveness inside OBS only)
+- A static `/health/` page that stays empty until overlays report to a central endpoint
+
+The combined overlay HUD does not consume health data. Real heartbeat monitoring is on the roadmap.

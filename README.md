@@ -103,13 +103,13 @@ All overlays are configured via URL parameters. Common params:
 
 ### Tool-specific params
 
-**Timer**: `mode` (up/down), `hours`, `minutes`, `seconds`, `label`
+**Timer**: `mode` (up/down), `date`, `time`, `labels` (1/0)
 
-**Viewer Count**: `format` (compact/full)
+**Viewer Count**: `icon` (1/0)
 
-**Follower Count**: `goal`, `show_bar` (1/0)
+**Follower Count**: `goal` (shows the bar when set), `icon` (1/0)
 
-**Chat Box**: `max` (message count), `fade` (seconds), `badges` (1/0)
+**Chat Box**: `max` (message count), `fade` (1/0), `demo` (1/0). Kick/YouTube stay empty until supported.
 
 **Geo Location**: `city`, `units` (metric/imperial)
 
@@ -119,9 +119,7 @@ All overlays are configured via URL parameters. Common params:
 
 ## Health Monitor
 
-Pulse includes an [Overlay Health Dashboard](https://pulse-stream-668.pages.dev/health/) — a streamer-facing diagnostic page that shows the status of your active overlays. Heartbeat age, latency, uptime, and an event log.
-
-Currently runs with simulated data for demo purposes.
+Pulse includes an [Overlay Health page](https://pulse-stream-668.pages.dev/health/). Overlays do not report here yet, so the page stays empty instead of inventing healthy scenes. The only liveness signal today is the local heartbeat dot on each overlay.
 
 ## Tech
 

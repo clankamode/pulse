@@ -303,6 +303,13 @@
       max-width: 62ch;
     }
 
+    .empty-state {
+      padding: 18px;
+      font-size: 0.84rem;
+      color: var(--text-secondary);
+      line-height: 1.45;
+    }
+
     @media (max-width: 760px) {
       .page {
         padding: 2.75rem 1.25rem 4rem;
@@ -373,12 +380,12 @@
       <div class="eyebrow">Overlay Health</div>
       <div class="hero-grid">
         <div>
-          <h1 class="hero-title">Control-room visibility for every active Pulse overlay.</h1>
-          <p class="hero-copy">Monitor scene-level heartbeat flow, transport latency, and overlay availability from one centered surface. The page simulates live health activity for demo purposes.</p>
+          <h1 class="hero-title">Overlay health reporting is not built yet.</h1>
+          <p class="hero-copy">Each overlay has a local heartbeat dot inside OBS. Those dots do not report here, so this page has no live status, latency, or uptime to show.</p>
         </div>
         <section class="status-card" aria-live="polite">
           <div class="status-label">Overall Status</div>
-          <div id="overall-status" class="status-title">All systems operational</div>
+          <div id="overall-status" class="status-title">No live overlay reports</div>
           <div class="status-meta">
             <div>
               <span class="metric-label">Active Overlays</span>
@@ -386,11 +393,11 @@
             </div>
             <div>
               <span class="metric-label">Healthy</span>
-              <span id="healthy-count" class="metric-value">0</span>
+              <span id="healthy-count" class="metric-value">—</span>
             </div>
             <div>
               <span class="metric-label">Avg Latency</span>
-              <span id="avg-latency" class="metric-value">0ms</span>
+              <span id="avg-latency" class="metric-value">—</span>
             </div>
           </div>
         </section>
@@ -400,17 +407,10 @@
     <section class="section">
       <div class="section-header">
         <h2 class="section-title">Active Overlays</h2>
-        <div id="last-scan" class="section-caption">Last scan 00:00:00</div>
+        <div id="last-scan" class="section-caption">Not scanning</div>
       </div>
       <div class="panel">
-        <div class="overlay-head" aria-hidden="true">
-          <div>Overlay</div>
-          <div>Status</div>
-          <div>Last Heartbeat</div>
-          <div>Latency</div>
-          <div>Uptime</div>
-        </div>
-        <div id="overlay-list"></div>
+        <div id="overlay-list" class="empty-state">Overlays do not send heartbeats to this page. This list stays empty until a reporting endpoint exists.</div>
       </div>
     </section>
 
@@ -420,13 +420,15 @@
         <div class="section-caption">Reverse chronological</div>
       </div>
       <div class="panel">
-        <ul id="event-log" class="log-list"></ul>
+        <ul id="event-log" class="log-list">
+          <li class="empty-state">No events. This log does not receive overlay telemetry.</li>
+        </ul>
       </div>
     </section>
 
     <section class="how">
       <h2 class="section-title">How It Works</h2>
-      <p>Each Pulse overlay emits a recurring heartbeat with timing and latency metadata. This page watches that stream, highlights missed heartbeats, and records recovery events so operators can verify scene health before viewers ever notice drift.</p>
+      <p>The pulsing dot on each overlay is a local CSS animation. It proves that overlay’s page is still rendering in OBS. It is not sent to Pulse, and this dashboard does not watch, score, or recover anything. Central heartbeat monitoring is on the roadmap; until then this page stays empty instead of inventing a healthy control room.</p>
     </section>
   </main>
 
@@ -442,291 +444,5 @@
     </div>
   </footer>
 
-  <script>
-    const overlays = [
-      {
-        id: 'viewer-xqc',
-        tool: 'Viewer Count',
-        owner: 'xqc',
-        scene: 'Intro Left Rail',
-        status: 'healthy',
-        lastHeartbeatAt: Date.now() - 2000,
-        latency: 42,
-        uptimeStartedAt: Date.now() - ((2 * 60 * 60 + 14 * 60) * 1000),
-        heartbeatEveryMs: 4000,
-        nextHeartbeatAt: Date.now() + 1800,
-        incidentStartedAt: null
-      },
-      {
-        id: 'subtrain-mizkif',
-        tool: 'Sub Train',
-        owner: 'mizkif',
-        scene: 'Full Cam Lower Third',
-        status: 'healthy',
-        lastHeartbeatAt: Date.now() - 5000,
-        latency: 71,
-        uptimeStartedAt: Date.now() - ((5 * 60 * 60 + 8 * 60) * 1000),
-        heartbeatEveryMs: 6000,
-        nextHeartbeatAt: Date.now() + 2200,
-        incidentStartedAt: null
-      },
-      {
-        id: 'chat-ludwig',
-        tool: 'Chat Feed',
-        owner: 'ludwig',
-        scene: 'BRB Right Column',
-        status: 'healthy',
-        lastHeartbeatAt: Date.now() - 1100,
-        latency: 58,
-        uptimeStartedAt: Date.now() - ((1 * 60 * 60 + 27 * 60) * 1000),
-        heartbeatEveryMs: 3000,
-        nextHeartbeatAt: Date.now() + 1400,
-        incidentStartedAt: null
-      },
-      {
-        id: 'goal-hasan',
-        tool: 'Sub Goal',
-        owner: 'hasanabi',
-        scene: 'Main Cam Banner',
-        status: 'healthy',
-        lastHeartbeatAt: Date.now() - 8000,
-        latency: 95,
-        uptimeStartedAt: Date.now() - ((46 * 60) * 1000),
-        heartbeatEveryMs: 7000,
-        nextHeartbeatAt: Date.now() + 2600,
-        incidentStartedAt: null
-      },
-      {
-        id: 'clock-valkyrae',
-        tool: 'Stream Timer',
-        owner: 'valkyrae',
-        scene: 'Countdown Stack',
-        status: 'healthy',
-        lastHeartbeatAt: Date.now() - 3000,
-        latency: 37,
-        uptimeStartedAt: Date.now() - ((8 * 60 * 60 + 3 * 60) * 1000),
-        heartbeatEveryMs: 5000,
-        nextHeartbeatAt: Date.now() + 3100,
-        incidentStartedAt: null
-      }
-    ];
-
-    const events = [
-      { timestamp: new Date(Date.now() - 74 * 1000), message: 'Viewer Count reconnected (was degraded for 12s)' },
-      { timestamp: new Date(Date.now() - 86 * 1000), message: 'Viewer Count heartbeat missed' },
-      { timestamp: new Date(Date.now() - 3 * 60 * 1000), message: 'All overlays healthy' }
-    ];
-
-    const overlayList = document.getElementById('overlay-list');
-    const eventLog = document.getElementById('event-log');
-    const overallStatus = document.getElementById('overall-status');
-    const activeCount = document.getElementById('active-count');
-    const healthyCount = document.getElementById('healthy-count');
-    const avgLatency = document.getElementById('avg-latency');
-    const lastScan = document.getElementById('last-scan');
-
-    function formatClock(date) {
-      return date.toLocaleTimeString([], {
-        hour12: false,
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      });
-    }
-
-    function pluralize(value, word) {
-      return value === 1 ? word : word + 's';
-    }
-
-    function formatRelative(seconds) {
-      return seconds + 's ago';
-    }
-
-    function formatUptime(ms) {
-      const totalSeconds = Math.max(0, Math.floor(ms / 1000));
-      const days = Math.floor(totalSeconds / 86400);
-      const hours = Math.floor((totalSeconds % 86400) / 3600);
-      const minutes = Math.floor((totalSeconds % 3600) / 60);
-      const seconds = totalSeconds % 60;
-
-      if (days > 0) {
-        return days + 'd ' + hours + 'h';
-      }
-      if (hours > 0) {
-        return hours + 'h ' + minutes + 'm';
-      }
-      if (minutes > 0) {
-        return minutes + 'm ' + seconds + 's';
-      }
-      return seconds + 's';
-    }
-
-    function pushEvent(message, time = new Date()) {
-      events.unshift({ timestamp: time, message });
-      events.splice(14);
-      renderEvents();
-    }
-
-    function humanStatus(status) {
-      if (status === 'healthy') return 'Healthy';
-      if (status === 'degraded') return 'Degraded';
-      return 'Offline';
-    }
-
-    function renderSummary(now) {
-      const healthy = overlays.filter((overlay) => overlay.status === 'healthy').length;
-      const degraded = overlays.filter((overlay) => overlay.status === 'degraded').length;
-      const dead = overlays.filter((overlay) => overlay.status === 'dead').length;
-      const latencyValue = Math.round(
-        overlays.reduce((sum, overlay) => sum + overlay.latency, 0) / overlays.length
-      );
-
-      let summary = 'All systems operational';
-      if (dead > 0) {
-        summary = dead + ' ' + pluralize(dead, 'overlay') + ' offline';
-      } else if (degraded > 0) {
-        summary = degraded + ' ' + pluralize(degraded, 'overlay') + ' degraded';
-      }
-
-      overallStatus.textContent = summary;
-      activeCount.textContent = String(overlays.length);
-      healthyCount.textContent = String(healthy);
-      avgLatency.textContent = latencyValue + 'ms';
-      lastScan.textContent = 'Last scan ' + formatClock(new Date(now));
-    }
-
-    function renderOverlays(now) {
-      overlayList.innerHTML = overlays.map((overlay) => {
-        const heartbeatAge = Math.max(0, Math.floor((now - overlay.lastHeartbeatAt) / 1000));
-        return `
-          <div class="overlay-row">
-            <div class="overlay-name">
-              <div class="overlay-title">${overlay.tool} &mdash; ${overlay.owner}</div>
-              <div class="overlay-context">${overlay.scene}</div>
-            </div>
-            <div class="status-pill ${overlay.status}" data-label="Status">
-              <span class="status-value">
-                <span class="status-dot" aria-hidden="true"></span>
-                <span>${humanStatus(overlay.status)}</span>
-              </span>
-            </div>
-            <div class="metric-cell" data-label="Heartbeat">${formatRelative(heartbeatAge)}</div>
-            <div class="metric-cell" data-label="Latency">${overlay.latency}ms</div>
-            <div class="metric-cell" data-label="Uptime">${formatUptime(now - overlay.uptimeStartedAt)}</div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function renderEvents() {
-      eventLog.innerHTML = events.map((event) => `
-        <li class="log-row">
-          <div class="log-time">${formatClock(event.timestamp)}</div>
-          <div class="log-message">${event.message}</div>
-        </li>
-      `).join('');
-    }
-
-    function rerollLatency(overlay, floor, ceiling) {
-      overlay.latency = Math.max(floor, Math.min(ceiling, Math.round(overlay.latency + (Math.random() * 22 - 11))));
-    }
-
-    function updateHealthyOverlay(overlay, now) {
-      if (now < overlay.nextHeartbeatAt) {
-        return;
-      }
-
-      overlay.lastHeartbeatAt = now;
-      rerollLatency(overlay, 28, 120);
-      overlay.nextHeartbeatAt = now + overlay.heartbeatEveryMs + Math.floor((Math.random() * 1600) - 800);
-    }
-
-    function recoverOverlay(overlay, now) {
-      const incidentDuration = Math.max(1, Math.floor((now - overlay.incidentStartedAt) / 1000));
-      const previousStatus = overlay.status;
-      overlay.status = 'healthy';
-      overlay.lastHeartbeatAt = now;
-      overlay.nextHeartbeatAt = now + overlay.heartbeatEveryMs;
-      overlay.uptimeStartedAt = now;
-      overlay.incidentStartedAt = null;
-      rerollLatency(overlay, 32, 110);
-      if (previousStatus === 'dead') {
-        pushEvent(overlay.tool + ' restored after ' + incidentDuration + 's offline');
-      } else {
-        pushEvent(overlay.tool + ' reconnected (was degraded for ' + incidentDuration + 's)');
-      }
-
-      if (overlays.every((item) => item.status === 'healthy')) {
-        pushEvent('All overlays healthy');
-      }
-    }
-
-    function markDead(overlay) {
-      overlay.status = 'dead';
-      overlay.latency = Math.min(overlay.latency + 120, 999);
-      pushEvent(overlay.tool + ' connection lost');
-    }
-
-    function beginIncident() {
-      const candidates = overlays.filter((overlay) => overlay.status === 'healthy');
-      if (!candidates.length) {
-        return;
-      }
-
-      const overlay = candidates[Math.floor(Math.random() * candidates.length)];
-      const now = Date.now();
-
-      overlay.status = 'degraded';
-      overlay.incidentStartedAt = now;
-      overlay.latency = Math.min(overlay.latency + 90, 420);
-      pushEvent(overlay.tool + ' heartbeat missed');
-
-      const escalationDelay = 8000 + Math.floor(Math.random() * 12000);
-      window.setTimeout(() => {
-        if (overlay.status !== 'degraded') {
-          return;
-        }
-
-        if (Math.random() < 0.28) {
-          markDead(overlay);
-          const recoveryDelay = 12000 + Math.floor(Math.random() * 12000);
-          window.setTimeout(() => {
-            if (overlay.status === 'dead') {
-              recoverOverlay(overlay, Date.now());
-            }
-          }, recoveryDelay);
-          return;
-        }
-
-        recoverOverlay(overlay, Date.now());
-      }, escalationDelay);
-    }
-
-    function scheduleIncident() {
-      const delay = 30000 + Math.floor(Math.random() * 30000);
-      window.setTimeout(() => {
-        beginIncident();
-        scheduleIncident();
-      }, delay);
-    }
-
-    function tick() {
-      const now = Date.now();
-
-      overlays.forEach((overlay) => {
-        if (overlay.status === 'healthy') {
-          updateHealthyOverlay(overlay, now);
-        }
-      });
-
-      renderSummary(now);
-      renderOverlays(now);
-    }
-
-    renderEvents();
-    tick();
-    window.setInterval(tick, 1000);
-    scheduleIncident();
-  </script>
 </body>
 </html>

@@ -130,6 +130,19 @@
       opacity: 0;
     }
 
+    .demo-mark {
+      position: fixed;
+      top: 8px;
+      left: 10px;
+      padding: 0.25em 0.5em;
+      background: rgba(17, 17, 17, 0.78);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.82);
+    }
+
     .hb {
       position: fixed;
       bottom: 4px;
@@ -154,6 +167,7 @@
       <div class="message" id="message"></div>
     </div>
   </div>
+  <div class="demo-mark" id="demo-mark">Demo</div>
   <div class="hb" title="Pulse overlay active"></div>
   <script>
     const params = new URLSearchParams(window.location.search);
@@ -261,7 +275,9 @@
     const styleKey = ['fade', 'slide', 'minimal'].includes(params.get('style')) ? params.get('style') : 'fade';
     const parsedDuration = Number(params.get('duration') || '5');
     const durationMs = Number.isFinite(parsedDuration) && parsedDuration > 0 ? parsedDuration * 1000 : 5000;
-    const platform = params.get('platform') === 'kick' ? 'kick' : 'twitch';
+    const platform = ['twitch', 'kick', 'youtube'].includes(params.get('platform'))
+      ? params.get('platform')
+      : 'twitch';
     const channel = (params.get('channel') || '').trim();
     const accentRgb = hexToRgb(accentHex);
 
@@ -430,7 +446,8 @@
         color: `#${textHex}`,
         alertColor: `#${accentHex}`,
         duration: durationMs / 1000,
-        style: styleKey
+        style: styleKey,
+        demo: true
       }
     };
 

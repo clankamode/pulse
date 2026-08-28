@@ -14,6 +14,9 @@ test('alerts overlay labels simulated events as Demo', () => {
   assert.match(alerts, /id="demo-mark">Demo/);
   assert.match(alerts, /demo: true/);
   assert.match(alerts, /scheduleDemo\(\)/);
+  // Corner mark must stay readable on transparent / light OBS scenes.
+  assert.match(alerts, /background: rgba\(17, 17, 17, 0\.78\)/);
+  assert.doesNotMatch(alerts, /\.demo-mark \{[^}]*color: rgba\(255, 255, 255, 0\.42\)/);
 });
 
 test('alerts overlay does not silently coerce YouTube to Twitch', () => {

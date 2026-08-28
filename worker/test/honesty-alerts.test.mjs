@@ -23,5 +23,7 @@ test('alerts overlay does not silently coerce YouTube to Twitch', () => {
 
 test('dashboard and landing do not advertise alerts as a live event source', () => {
   assert.match(dashboard, /no live event source yet/);
+  assert.match(dashboard, /Demo \(needs OAuth\)/);
   assert.match(landing, /Demo notifications — no live event source/);
+  assert.match(landing, /Demo count — needs OAuth for live subs/);
 });
